@@ -1,0 +1,249 @@
+{
+    "common": {
+        "actions": {
+            "cancel": "Cancelar",
+            "confirm": "Confirmar",
+            "continue": "Continuar",
+            "goBack": "Voltar",
+            "reset": "Redefinir",
+            "submit": "Enviar"
+        },
+        "status": {
+            "loading": "Carregando...",
+            "error": {
+                "default": "Ocorreu um erro",
+                "serverConnection": "Não foi possível conectar ao servidor"
+            }
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Faça login para acessar",
+            "form": {
+                "email": {
+                    "label": "Endereço de e-mail",
+                    "required": "E-mail é obrigatório",
+                    "placeholder": "eu@exemplo.com"
+                },
+                "password": {
+                    "label": "Senha",
+                    "required": "Senha é obrigatória"
+                },
+                "actions": {
+                    "signin": "Entrar"
+                },
+                "alternativeText": {
+                    "or": "OU"
+                }
+            },
+            "errors": {
+                "default": "Não foi possível fazer login",
+                "signin": "Tente fazer login com outra conta",
+                "oauthSignin": "Tente fazer login com outra conta",
+                "redirectUriMismatch": "O URI de redirecionamento não corresponde à configuração",
+                "oauthCallback": "Tente fazer login com outra conta",
+                "oauthCreateAccount": "Tente fazer login com outra conta",
+                "emailCreateAccount": "Tente fazer login com outra conta",
+                "callback": "Tente fazer login com outra conta",
+                "oauthAccountNotLinked": "Para confirmar sua identidade, faça login com a mesma conta usada originalmente",
+                "emailSignin": "Não foi possível enviar o e-mail",
+                "emailVerify": "Verifique seu e-mail, uma nova mensagem foi enviada",
+                "credentialsSignin": "Falha no login. Verifique os dados informados",
+                "sessionRequired": "Faça login para acessar esta página"
+            }
+        },
+        "provider": {
+            "continue": "Continuar com {{provider}}"
+        }
+    },
+    "chat": {
+        "input": {
+            "placeholder": "Digite sua mensagem aqui...",
+            "actions": {
+                "send": "Enviar mensagem",
+                "stop": "Parar",
+                "attachFiles": "Anexar arquivos"
+            }
+        },
+        "favorites": {
+            "use": "Usar mensagem favorita",
+            "headline": "Mensagens Favoritas"
+        },
+        "commands": {
+            "button": "Ferramentas",
+            "changeTool": "Trocar Ferramenta",
+            "availableTools": "Ferramentas Disponíveis"
+        },
+        "speech": {
+            "start": "Iniciar gravação",
+            "stop": "Parar gravação",
+            "connecting": "Conectando"
+        },
+        "fileUpload": {
+            "dragDrop": "Arraste e solte arquivos aqui",
+            "browse": "Procurar Arquivos",
+            "sizeLimit": "Limite:",
+            "errors": {
+                "failed": "Falha ao enviar",
+                "cancelled": "Upload cancelado de"
+            },
+            "actions": {
+                "cancelUpload": "Cancelar upload",
+                "removeAttachment": "Remover anexo"
+            }
+        },
+        "messages": {
+            "status": {
+                "using": "Usando",
+                "used": "Usado"
+            },
+            "actions": {
+                "copy": {
+                    "button": "Copiar",
+                    "success": "Copiado!"
+                }
+            },
+            "feedback": {
+                "positive": "Útil",
+                "negative": "Não útil",
+                "edit": "Editar feedback",
+                "dialog": {
+                    "title": "Adicionar comentário",
+                    "submit": "Enviar feedback",
+                    "yourFeedback": "Seu feedback..."
+                },
+                "status": {
+                    "updating": "Atualizando",
+                    "updated": "Feedback atualizado"
+                }
+            }
+        },
+        "history": {
+            "title": "Últimas Entradas",
+            "empty": "Vazio...",
+            "show": "Mostrar histórico"
+        },
+        "settings": {
+            "title": "Painel de Configurações",
+            "customize": "Personalize suas configurações aqui"
+        },
+        "watermark": "IAs podem cometer erros. Verifique informações importantes."
+    },
+    "threadHistory": {
+        "sidebar": {
+            "title": "Conversas Anteriores",
+            "filters": {
+                "search": "Buscar",
+                "placeholder": "Buscar conversas..."
+            },
+            "timeframes": {
+                "today": "Hoje",
+                "yesterday": "Ontem",
+                "previous7days": "Últimos 7 dias",
+                "previous30days": "Últimos 30 dias"
+            },
+            "empty": "Nenhuma conversa encontrada",
+            "actions": {
+                "close": "Fechar barra lateral",
+                "open": "Abrir barra lateral"
+            }
+        },
+        "thread": {
+            "untitled": "Conversa sem título",
+            "menu": {
+                "rename": "Renomear",
+                "share": "Compartilhar",
+                "delete": "Excluir"
+            },
+            "actions": {
+                "share": {
+                    "title": "Compartilhar link",
+                    "button": "Compartilhar",
+                    "status": {
+                        "copied": "Link copiado",
+                        "created": "Link de compartilhamento criado!",
+                        "unshared": "Compartilhamento desabilitado"
+                    },
+                    "error": {
+                        "create": "Falha ao criar link",
+                        "unshare": "Falha ao descompartilhar"
+                    }
+                },
+                "delete": {
+                    "title": "Confirmar exclusão",
+                    "description": "Isso excluirá a conversa e suas mensagens. Esta ação não pode ser desfeita",
+                    "success": "Conversa excluída",
+                    "inProgress": "Excluindo conversa"
+                },
+                "rename": {
+                    "title": "Renomear Conversa",
+                    "description": "Digite um novo nome para esta conversa",
+                    "form": {
+                        "name": {
+                            "label": "Nome",
+                            "placeholder": "Digite o novo nome"
+                        }
+                    },
+                    "success": "Conversa renomeada!",
+                    "inProgress": "Renomeando conversa"
+                }
+            }
+        }
+    },
+    "navigation": {
+        "header": {
+            "chat": "Chat",
+            "readme": "Readme",
+            "theme": {
+                "light": "Tema Claro",
+                "dark": "Tema Escuro",
+                "system": "Seguir Sistema"
+            }
+        },
+        "newChat": {
+            "button": "Nova Conversa",
+            "dialog": {
+                "title": "Criar Nova Conversa",
+                "description": "Isso limpará seu histórico atual. Deseja continuar?",
+                "tooltip": "Nova Conversa"
+            }
+        },
+        "user": {
+            "menu": {
+                "settings": "Configurações",
+                "settingsKey": "S",
+                "apiKeys": "Chaves de API",
+                "logout": "Sair"
+            }
+        }
+    },
+    "apiKeys": {
+        "title": "Chaves de API Necessárias",
+        "description": "Para usar este app, as seguintes chaves de API são necessárias. As chaves são armazenadas localmente.",
+        "success": {
+            "saved": "Salvo com sucesso"
+        }
+    },
+    "alerts": {
+        "info": "Info",
+        "note": "Nota",
+        "tip": "Dica",
+        "important": "Importante",
+        "warning": "Aviso",
+        "caution": "Cuidado",
+        "debug": "Debug",
+        "example": "Exemplo",
+        "success": "Sucesso",
+        "help": "Ajuda",
+        "idea": "Ideia",
+        "pending": "Pendente",
+        "security": "Segurança",
+        "beta": "Beta",
+        "best-practice": "Boa Prática"
+    },
+    "components": {
+        "MultiSelectInput": {
+            "placeholder": "Selecione..."
+        }
+    }
+}

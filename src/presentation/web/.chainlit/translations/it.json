@@ -1,0 +1,180 @@
+{
+    "common": {
+        "actions": {
+            "cancel": "Annulla",
+            "confirm": "Conferma",
+            "continue": "Continua",
+            "goBack": "Indietro",
+            "reset": "Reimposta",
+            "submit": "Invia"
+        },
+        "status": {
+            "loading": "Caricamento...",
+            "error": {
+                "default": "Si è verificato un errore",
+                "serverConnection": "Impossibile raggiungere il server"
+            }
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Accedi all'app",
+            "form": {
+                "email": {
+                    "label": "Indirizzo email",
+                    "required": "L'email è obbligatoria",
+                    "placeholder": "io@esempio.com"
+                },
+                "password": {
+                    "label": "Password",
+                    "required": "La password è obbligatoria"
+                },
+                "actions": {
+                    "signin": "Accedi"
+                },
+                "alternativeText": {
+                    "or": "OPPURE"
+                }
+            },
+            "errors": {
+                "default": "Impossibile accedere",
+                "signin": "Prova ad accedere con un altro account",
+                "credentialsSignin": "Accesso fallito. Verifica i dati inseriti",
+                "sessionRequired": "Accedi per vedere questa pagina"
+            }
+        },
+        "provider": {
+            "continue": "Continua con {{provider}}"
+        }
+    },
+    "chat": {
+        "input": {
+            "placeholder": "Scrivi il tuo messaggio qui...",
+            "actions": {
+                "send": "Invia messaggio",
+                "stop": "Ferma",
+                "attachFiles": "Allega file"
+            }
+        },
+        "fileUpload": {
+            "dragDrop": "Trascina i file qui",
+            "browse": "Sfoglia File",
+            "sizeLimit": "Limite:",
+            "errors": {
+                "failed": "Caricamento fallito",
+                "cancelled": "Caricamento annullato di"
+            },
+            "actions": {
+                "cancelUpload": "Annulla caricamento",
+                "removeAttachment": "Rimuovi allegato"
+            }
+        },
+        "messages": {
+            "status": {
+                "using": "Usando",
+                "used": "Usato"
+            },
+            "actions": {
+                "copy": {
+                    "button": "Copia",
+                    "success": "Copiato!"
+                }
+            },
+            "feedback": {
+                "positive": "Utile",
+                "negative": "Non utile",
+                "edit": "Modifica feedback",
+                "dialog": {
+                    "title": "Aggiungi commento",
+                    "submit": "Invia feedback",
+                    "yourFeedback": "Il tuo feedback..."
+                }
+            }
+        },
+        "history": {
+            "title": "Ultimi Input",
+            "empty": "Vuoto...",
+            "show": "Mostra cronologia"
+        },
+        "settings": {
+            "title": "Impostazioni",
+            "customize": "Personalizza le impostazioni"
+        },
+        "watermark": "Le IA possono commettere errori. Verifica le informazioni importanti."
+    },
+    "threadHistory": {
+        "sidebar": {
+            "title": "Chat Precedenti",
+            "filters": {
+                "search": "Cerca",
+                "placeholder": "Cerca conversazioni..."
+            },
+            "timeframes": {
+                "today": "Oggi",
+                "yesterday": "Ieri",
+                "previous7days": "Ultimi 7 giorni",
+                "previous30days": "Ultimi 30 giorni"
+            },
+            "empty": "Nessuna conversazione trovata",
+            "actions": {
+                "close": "Chiudi barra laterale",
+                "open": "Apri barra laterale"
+            }
+        },
+        "thread": {
+            "untitled": "Conversazione senza titolo",
+            "menu": {
+                "rename": "Rinomina",
+                "share": "Condividi",
+                "delete": "Elimina"
+            }
+        }
+    },
+    "navigation": {
+        "header": {
+            "chat": "Chat",
+            "readme": "Readme",
+            "theme": {
+                "light": "Tema Chiaro",
+                "dark": "Tema Scuro",
+                "system": "Segui Sistema"
+            }
+        },
+        "newChat": {
+            "button": "Nuova Chat",
+            "dialog": {
+                "title": "Crea Nuova Chat",
+                "description": "Questo cancellerà la cronologia attuale. Vuoi continuare?",
+                "tooltip": "Nuova Chat"
+            }
+        },
+        "user": {
+            "menu": {
+                "settings": "Impostazioni",
+                "settingsKey": "S",
+                "apiKeys": "Chiavi API",
+                "logout": "Esci"
+            }
+        }
+    },
+    "apiKeys": {
+        "title": "Chiavi API Richieste",
+        "description": "Per usare questa app sono necessarie le seguenti chiavi API.",
+        "success": {
+            "saved": "Salvato con successo"
+        }
+    },
+    "alerts": {
+        "info": "Info",
+        "note": "Nota",
+        "tip": "Suggerimento",
+        "important": "Importante",
+        "warning": "Avviso",
+        "caution": "Attenzione"
+    },
+    "components": {
+        "MultiSelectInput": {
+            "placeholder": "Seleziona..."
+        }
+    }
+}
