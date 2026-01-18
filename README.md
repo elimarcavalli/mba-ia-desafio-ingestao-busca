@@ -29,7 +29,6 @@ O sistema suporta múltiplos provedores de IA (**OpenAI** e **Google Gemini**) e
 -   **🔌 Multi-Provider**: Alterne facilmente entre `OpenAI` e `Google Gemini`.
 -   **🚀 Interface Web**: Interface moderna e interativa construída com **Chainlit**.
 -   **⚡ Alta Performance**: Processamento assíncrono e banco de dados relacional robusto.
--   **🔐 Autenticação**: Sistema de login com auto-registro de usuários.
 
 ---
 
@@ -145,16 +144,6 @@ chainlit run chainlit_app.py --port 8000
 ```bash
 python -m src.main
 ```
-
----
-
-## 🔐 Autenticação
-
-O sistema suporta autenticação com banco de dados:
-
-- **Auto-registro**: Novos usuários são criados automaticamente no primeiro login
-- **Persistência**: Credenciais armazenadas no PostgreSQL com hash seguro
-- **Requisitos**: Usuário (mín. 3 caracteres), Senha (mín. 4 caracteres)
 
 ---
 

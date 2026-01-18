@@ -83,10 +83,6 @@ def configure_env():
     else:
         api_key = input("Enter your GOOGLE_API_KEY: ").strip()
 
-    # Generate JWT Secret
-    import secrets
-    jwt_secret = secrets.token_urlsafe(32)
-
     # Database URLs: Chainlit needs postgresql:// (asyncpg), while the app auto-converts to postgresql+psycopg://
     db_base_url = "postgresql://postgres:postgres@localhost:5432/rag"
 
@@ -99,7 +95,6 @@ LLM_PROVIDER={llm_provider}
 DATABASE_URL={db_base_url}
 PG_VECTOR_COLLECTION_NAME=document_chunks
 PDF_PATH=document.pdf
-CHAINLIT_AUTH_SECRET={jwt_secret}
 
 # API Keys
 OPENAI_API_KEY={api_key if llm_provider == 'openai' else ''}
@@ -228,46 +223,12 @@ def step_docker_compose():
     
     print_color("Infrastructure ready!", "GREEN")
 
-def ensure_jwt_secret():
-    """Ensure CHAINLIT_AUTH_SECRET is present and not empty in .env"""
-    import secrets
-    import re
-    
-    # If .env doesn't exist at all, create it with just the secret
-    if not ENV_FILE.exists():
-        print_color("Creating .env with JWT secret...", "BLUE")
-        secret = secrets.token_urlsafe(32)
-        ENV_FILE.write_text(f"CHAINLIT_AUTH_SECRET={secret}\n")
-        return
-
-    content = ENV_FILE.read_text()
-    
-    # Check if secret exists AND has a value (not empty)
-    match = re.search(r'CHAINLIT_AUTH_SECRET=(.+)', content)
-    if match and match.group(1).strip():
-        return  # Secret exists and has a value
-    
-    # Secret is missing or empty - add/fix it
-    print_color("Adding/fixing JWT secret in .env...", "BLUE")
-    secret = secrets.token_urlsafe(32)
-    
-    if "CHAINLIT_AUTH_SECRET=" in content:
-        # Replace empty/invalid value
-        content = re.sub(r'CHAINLIT_AUTH_SECRET=.*', f'CHAINLIT_AUTH_SECRET={secret}', content)
-        ENV_FILE.write_text(content)
-    else:
-        # Append new secret
-        with open(ENV_FILE, "a") as f:
-            f.write(f"\nCHAINLIT_AUTH_SECRET={secret}\n")
-
 def step_run_app():
     print_color("\n[4/4] Launching Application...", "HEADER")
     
     if not APP_PATH.exists():
         print_color(f"Application file {APP_PATH} not found!", "FAIL")
         sys.exit(1)
-
-    ensure_jwt_secret()
 
     print_color(f"Starting Chainlit server on port {CHAINLIT_PORT}...", "GREEN")
     print_color("Press Ctrl+C to stop the server.", "WARNING")

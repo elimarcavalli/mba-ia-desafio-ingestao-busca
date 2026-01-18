@@ -16,15 +16,6 @@ SCHEMA = """
 -- Enable UUID extension just in case, though usually generated in app
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- AppUser Table (for authentication)
-CREATE TABLE IF NOT EXISTS "AppUser" (
-    "id" SERIAL PRIMARY KEY,
-    "username" TEXT NOT NULL UNIQUE,
-    "password_hash" TEXT NOT NULL,
-    "role" TEXT NOT NULL DEFAULT 'user',
-    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 -- User Table
 CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT PRIMARY KEY,

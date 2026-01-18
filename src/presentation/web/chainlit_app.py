@@ -6,7 +6,6 @@ Run with: chainlit run chainlit_app.py --port 8000
 """
 import os
 import sys
-import asyncio
 
 # Add project root to path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -16,60 +15,10 @@ import chainlit as cl
 from dotenv import load_dotenv
 
 from src.infrastructure.factories.provider_factory import ProviderFactory
-from src.infrastructure.auth.user_service import verify_user, create_user, init_users_table, ensure_default_admin
 from src.application.use_cases.ingest_document import IngestDocumentUseCase
 from src.application.use_cases.search_documents import SearchDocumentsUseCase
 
 load_dotenv()
-
-
-# Initialize auth tables on module load
-def _init_auth():
-    """Initialize auth system."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.create_task(init_users_table())
-            asyncio.create_task(ensure_default_admin())
-        else:
-            loop.run_until_complete(init_users_table())
-            loop.run_until_complete(ensure_default_admin())
-    except Exception as e:
-        print(f"Auth init warning: {e}")
-
-_init_auth()
-
-
-@cl.password_auth_callback
-async def auth_callback(username: str, password: str):
-    """
-    Database-backed password authentication with auto-registration.
-    - First tries to verify existing user
-    - If user doesn't exist, creates a new account automatically
-    """
-    # Try to verify existing user
-    user_data = await verify_user(username, password)
-    
-    if user_data:
-        return cl.User(
-            identifier=user_data["username"],
-            metadata={"role": user_data["role"], "id": user_data["id"]}
-        )
-    
-    # User doesn't exist - try to create (auto-registration)
-    # Only if username has minimum length (to avoid accidental creation)
-    if len(username) >= 3 and len(password) >= 4:
-        success = await create_user(username, password, role="user")
-        if success:
-            # Verify the just-created user
-            user_data = await verify_user(username, password)
-            if user_data:
-                return cl.User(
-                    identifier=user_data["username"],
-                    metadata={"role": user_data["role"], "id": user_data["id"], "new_user": True}
-                )
-    
-    return None
 
 
 @cl.on_chat_resume

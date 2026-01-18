@@ -33,14 +33,6 @@ Este é um sistema de **Retrieval-Augmented Generation (RAG)** capaz de:
 
 ---
 
-## 🔐 Autenticação
-
-- Novos usuários são criados automaticamente no primeiro login
-- Usuário: mínimo 3 caracteres
-- Senha: mínimo 4 caracteres
-
----
-
 ## 🛠️ Tecnologias
 
 | Componente | Tecnologia |
