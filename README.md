@@ -24,17 +24,16 @@ O sistema suporta múltiplos provedores de IA (**OpenAI** e **Google Gemini**) e
 
 ## ✨ Principais Funcionalidades
 
--   **🔍 Busca Híbrida e Semântica**: Utiliza o poder do `pgvector` para buscas por similaridade de cosseno de alta precisão.
--   **🏗️ Clean Architecture**: O código segue rigorosamente os princípios de Clean e Hexagonal Architecture, garantindo desacoplamento entre domínio, aplicação e infraestrutura.
--   **🔌 Multi-Provider**: Design agnóstico que permite alternar facilmente entre `OpenAI` e `Google Gemini` apenas mudando configurações.
--   **🚀 Interface Dupla**: Oferece uma CLI simples para testes rápidos e uma interface Web moderna e interativa construída com **Chainlit**.
--   **⚡ Alta Performance**: Processamento assíncrono e uso de banco de dados relacional robusto para escalar a base de conhecimentos.
+-   **🔍 Busca Semântica**: Utiliza o poder do `pgvector` para buscas por similaridade de cosseno.
+-   **🏗️ Clean Architecture**: Código segue princípios de Clean e Hexagonal Architecture.
+-   **🔌 Multi-Provider**: Alterne facilmente entre `OpenAI` e `Google Gemini`.
+-   **🚀 Interface Web**: Interface moderna e interativa construída com **Chainlit**.
+-   **⚡ Alta Performance**: Processamento assíncrono e banco de dados relacional robusto.
+-   **🔐 Autenticação**: Sistema de login com auto-registro de usuários.
 
 ---
 
 ## 🏗️ Arquitetura do Sistema
-
-O projeto está organizado para facilitar a manutenção e escalabilidade:
 
 ```mermaid
 graph TD
@@ -72,118 +71,153 @@ graph TD
     Gemini -.-> Ports
 ```
 
--   **Domain**: Contém as regras de negócio e interfaces (Ports). Não depende de frameworks externos.
--   **Application**: Implementa os casos de uso (`Ingestão`, `Busca`).
--   **Infrastructure**: Implementa os adaptadores (Banco de dados, APIs de LLM).
+-   **Domain**: Regras de negócio e interfaces (Ports). Não depende de frameworks externos.
+-   **Application**: Casos de uso (`Ingestão`, `Busca`).
+-   **Infrastructure**: Adaptadores (Banco de dados, APIs de LLM).
 -   **Presentation**: Interfaces para o usuário final.
 
 ---
 
 ## 🚀 Como Executar
 
-### Pré-requisitos
+### ⚡ Início Rápido (Recomendado)
 
--   **Docker & Docker Compose**
--   **Python 3.12+** (para execução local sem Docker)
--   Chaves de API da **OpenAI** ou **Google**
-
-### 1. Configuração do Ambiente
-
-Clone o repositório e configure as variáveis de ambiente:
+O projeto inclui um **script interativo** que automatiza toda a configuração:
 
 ```bash
-git clone <url-do-repositorio>
+python3 start.py
+```
+
+**Menu de Opções:**
+
+| Opção | Descrição |
+|-------|-----------|
+| **1. Start System** | Cria `venv`, instala dependências, sobe Docker e inicia a aplicação |
+| **2. Force Restart** | Mata processos travados e reinicia |
+| **3. Quick Launch** | Pula verificações e inicia diretamente (para desenvolvimento) |
+| **4. Stop All** | Encerra todos os processos |
+| **5. Reset System** | Apaga Docker volumes, venv e configurações |
+| **6. Exit** | Sai do script |
+
+**Configuração Assistida:**
+- Wizard pergunta qual provedor de IA usar (OpenAI ou Google Gemini)
+- Solicita a API Key correspondente
+- Gera automaticamente as demais configurações
+
+---
+
+### 📋 Instalação Manual
+
+Se preferir configurar manualmente:
+
+#### 1. Clone e Configure
+
+```bash
+git clone https://github.com/elimarcavalli/mba-ia-desafio-ingestao-busca.git
 cd mba-ia-desafio-ingestao-busca
 cp .env.example .env
+# Edite o arquivo .env com suas credenciais
 ```
 
-Edite o arquivo `.env` com suas credenciais.
-
-### 2. Início Rápido (Recomendado)
-
-Utilize o script interativo que configura tudo para você (venv, dependências e docker):
-
-```bash
-python start.py
-```
-
-### 3. Instalação Manual (Alternativa)
-
-Caso prefira fazer passo-a-passo:
-
-#### Iniciando a Infraestrutura
-Suba o banco de dados PostgreSQL com a extensão pgvector já configurada:
+#### 2. Inicie a Infraestrutura
 
 ```bash
 docker compose up -d
 ```
 
-#### Instalação de Dependências
+#### 3. Instale Dependências
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-# ou .\venv\Scripts\activate  # Windows
-
 pip install -r requirements.txt
 ```
 
-#### Executando a Aplicação
+#### 4. Execute a Aplicação
 
-
-### 4. Executando a Aplicação
-
-#### 🖥️ Interface Web (Recomendado)
-
-Utilize a interface visual interativa do Chainlit:
-
+**Interface Web (Chainlit):**
 ```bash
 cd src/presentation/web
-chainlit run chainlit_app.py -w
+chainlit run chainlit_app.py --port 8000
 ```
-Acesse em: `http://localhost:8000`
 
-#### 💻 Interface CLI
-
-Para testes rápidos via terminal:
-
+**Interface CLI:**
 ```bash
 python -m src.main
 ```
 
 ---
 
-## 📈 Escalabilidade e Visão de Futuro
+## 🔐 Autenticação
 
-Este projeto foi desenhado pensando em crescimento. Aqui estão os pontos chave que permitem ao sistema escalar:
+O sistema suporta autenticação com banco de dados:
 
-### 1. Banco de Dados Robusto (PostgreSQL vs Toy DBs)
-Diferente de soluções que usam ChromaDB ou FAISS em memória, optamos pelo **PostgreSQL**. Isso garante:
--   **Persistência ACID**: Seus dados não são perdidos se o container cair.
--   **Escalabilidade Horizontal**: O Postgres suporta milhões de vetores com a indexação HNSW do pgvector.
--   **Dados Relacionais**: Possibilidade de cruzar metadados relacionais (autores, datas) com busca semântica na mesma query.
-
-### 2. Containerização e Microserviços
-A aplicação está Dockerizada, pronta para ser orquestrada via **Kubernetes**.
--   O serviço de ingestão pode ser separado do serviço de busca em pods distintos para escalar conforme a demanda de leitura vs escrita.
-
-### 3. Adapters Modulares
-A arquitetura hexagonal permite trocar componentes sem refatorar o core:
--   **Mudança de Modelo**: Trocar GPT-4 por Claude ou Llama 3 é apenas uma questão de criar um novo Adapter em `src/infrastructure/adapters`.
--   **Mudança de Vector Store**: Migrar para Qdrant ou Pinecone exigiria apenas uma nova implementação de `RepositoryPort`.
-
-### 4. Processamento Assíncrono
-A interface Chainlit já opera de forma assíncrona. O próximo passo lógico para escala massiva seria introduzir filas (RabbitMQ/Kafka) na camada de Ingestão para processar milhares de PDFs em background sem travar a API.
+- **Auto-registro**: Novos usuários são criados automaticamente no primeiro login
+- **Persistência**: Credenciais armazenadas no PostgreSQL com hash seguro
+- **Requisitos**: Usuário (mín. 3 caracteres), Senha (mín. 4 caracteres)
 
 ---
 
-## 🛠️ Desenvolvimento
+## 📈 Escalabilidade
 
-Para rodar os testes unitários e de integração:
+### Banco de Dados Robusto (PostgreSQL)
+- **Persistência ACID**: Dados seguros mesmo se o container cair
+- **Escalabilidade**: Suporta milhões de vetores com indexação HNSW
+- **Dados Relacionais**: Cruzamento de metadados com busca semântica
+
+### Arquitetura Modular
+- **Troca de Modelo**: Substituir GPT-4 por Claude ou Llama requer apenas novo Adapter
+- **Troca de Vector Store**: Migrar para Qdrant ou Pinecone exige nova implementação de `RepositoryPort`
+
+### Pronto para Produção
+- Containerização Docker pronta para Kubernetes
+- Serviços podem ser escalados independentemente
+
+---
+
+## 🧪 Testes
+
+Execute os testes unitários e de integração:
 
 ```bash
 pytest src/tests -v
 ```
 
 ---
-**Desenvolvido para o MBA Full Cycle - Engenharia de Software com IA**
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── domain/              # Entidades e Ports (interfaces)
+├── application/         # Casos de Uso
+├── infrastructure/      # Adaptadores (DB, LLM, Auth)
+├── presentation/        # CLI e Web (Chainlit)
+├── config/              # Configurações
+└── scripts/             # Scripts de manutenção
+```
+
+---
+
+## 🛠️ Tecnologias
+
+| Componente | Tecnologia |
+|------------|------------|
+| Linguagem | Python 3.12+ |
+| Framework IA | LangChain |
+| Vector Database | PostgreSQL + pgvector |
+| Interface Web | Chainlit |
+| Containerização | Docker / Docker Compose |
+| Provedores LLM | OpenAI, Google Gemini |
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT.
+
+---
+
+**Desenvolvido por [Elimar Cavalli](https://github.com/elimarcavalli)**
+
+*Desafio do MBA em Engenharia de Software com IA - Full Cycle*
