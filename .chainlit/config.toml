@@ -22,13 +22,6 @@ mask_user_env = false
 # Authorized origins
 allow_origins = ["*"]
 
-# Data persistence layer using PostgreSQL
-# Chainlit uses DATABASE_URL environment variable directly
-# Note: Chainlit requires postgresql:// format (not +psycopg)
-[data_layer]
-# Disabled custom var to use default DATABASE_URL
-# database_url_env_var = "CHAINLIT_DATABASE_URL"
-
 [features]
 # Process and display HTML in messages. This can be a security risk (see https://stackoverflow.com/questions/19603097/why-is-it-dangerous-to-render-user-generated-html-or-javascript)
 unsafe_allow_html = false
@@ -99,16 +92,17 @@ reaction_on_message_received = false
 
 [UI]
 # Name of the assistant.
-name = "Busca Semântica"
+name = "Assistant"
 
-default_theme = "dark"
+# default_theme = "dark"
 
-# Language is now controlled by the language-selector.js
-# language = "pt-BR"
+# Force a specific language for all users (e.g., "en-US", "he-IL", "fr-FR")
+# If not set, the browser's language will be used
+# language = "en-US"
 
 # layout = "wide"
 
-default_sidebar_state = "open"
+# default_sidebar_state = "open"
 
 # Description of the assistant. This is used for HTML tags.
 # description = ""
@@ -125,7 +119,7 @@ cot = "full"
 
 # Specify a JavaScript file that can be used to customize the user interface.
 # The JavaScript file can be served from the public directory.
-custom_js = "/public/language-selector.js"
+# custom_js = "/public/test.js"
 
 # The style of alert boxes. Can be "classic" or "modern".
 alert_style = "classic"

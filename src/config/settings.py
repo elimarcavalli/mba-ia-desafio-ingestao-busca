@@ -39,6 +39,16 @@ class Settings(BaseSettings):
     chunk_overlap: int = 150
     retriever_k: int = 10
     llm_timeout: int = 60
+    
+    @property
+    def sqlalchemy_database_url(self) -> str:
+        """
+        Get database URL formatted for SQLAlchemy/LangChain (psycopgv3).
+        Converts 'postgresql://' to 'postgresql+psycopg://' if needed.
+        """
+        if self.database_url.startswith("postgresql://"):
+            return self.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        return self.database_url
 
 
 @lru_cache

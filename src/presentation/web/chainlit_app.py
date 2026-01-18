@@ -21,6 +21,80 @@ from src.application.use_cases.search_documents import SearchDocumentsUseCase
 load_dotenv()
 
 
+@cl.password_auth_callback
+def auth_callback(username: str, password: str):
+    """
+    Simple password authentication.
+    In production, replace with proper authentication (database, LDAP, etc.)
+    """
+    # Demo credentials - change for production
+    valid_users = {
+        "admin": "admin",
+        "user": "user123"
+    }
+    
+    if username in valid_users and valid_users[username] == password:
+        return cl.User(
+            identifier=username,
+            metadata={"role": "admin" if username == "admin" else "user"}
+        )
+    return None
+
+
+@cl.on_chat_resume
+async def on_chat_resume(thread: dict):
+    """
+    Resume a previous chat thread.
+    Restores the search context from the persisted thread metadata.
+    """
+    # Get pdf_data from thread metadata
+    metadata = thread.get("metadata", {})
+    pdf_data = metadata.get("pdf_data", {})
+    
+    cl.user_session.set("pdf_data", pdf_data)
+    
+    if pdf_data:
+        # Restore search capability using existing documents in vector store
+        try:
+            repository = ProviderFactory.get_repository()
+            llm = ProviderFactory.get_llm()
+            search_use_case = SearchDocumentsUseCase(repository, llm)
+            cl.user_session.set("search_use_case", search_use_case)
+            
+            total_chunks = sum(pdf_data.values())
+            await cl.Message(
+                content=f"♻️ **Sessão restaurada!**\n\n"
+                        f"📚 {len(pdf_data)} PDF(s) no contexto ({total_chunks} chunks)\n"
+                        f"💬 Continue fazendo perguntas!",
+                actions=[
+                    cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs Carregados")
+                ]
+            ).send()
+        except Exception as e:
+            await cl.Message(content=f"⚠️ Erro ao restaurar contexto: {str(e)}").send()
+    else:
+        await cl.Message(
+            content="⚠️ Sessão restaurada, mas sem PDFs no contexto.\n"
+                    "Envie um PDF para começar.",
+        ).send()
+
+
+async def update_thread_metadata():
+    """Update thread metadata with current pdf_data."""
+    try:
+        pdf_data = cl.user_session.get("pdf_data") or {}
+        
+        # Get thread_id from session context
+        if hasattr(cl.context.session, "thread_id"):
+            thread_id = cl.context.session.thread_id
+            if thread_id:
+                # Update thread metadata
+                await cl.Thread(id=thread_id, metadata={"pdf_data": pdf_data}).update()
+    except Exception as e:
+        print(f"Warning: Failed to update thread metadata: {e}")
+
+
+
 async def show_pdf_list():
     """Display list of PDFs with delete buttons."""
     pdf_data = cl.user_session.get("pdf_data") or {}
@@ -68,6 +142,9 @@ async def handle_delete_pdf(action: cl.Action):
         if pdf_name in pdf_data:
             del pdf_data[pdf_name]
         cl.user_session.set("pdf_data", pdf_data)
+        
+        # Persist to thread metadata
+        await update_thread_metadata()
         
         # Recreate search use case if documents remain
         if pdf_data:
@@ -154,6 +231,9 @@ async def start():
         pdf_data = {pdf_name: chunk_count}
         cl.user_session.set("pdf_data", pdf_data)
         
+        # Persist to thread metadata
+        await update_thread_metadata()
+        
         await cl.Message(
             content=f"✅ **{pdf_name}** processado! ({chunk_count} chunks)\n\n"
                     "💡 Anexe mais PDFs pelo 📎, arraste ou faça perguntas!",
@@ -163,6 +243,8 @@ async def start():
         ).send()
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         await cl.Message(content=f"❌ Erro: {str(e)}").send()
 
 
@@ -197,7 +279,11 @@ async def main(message: cl.Message):
                     ).send()
                     
                 except Exception as e:
+                    print(f"Error deleting PDF: {e}")
                     await cl.Message(content=f"❌ Erro: {str(e)}").send()
+            
+            # Persist all added PDFs to thread metadata
+            await update_thread_metadata()
             
             return
     

@@ -23,7 +23,7 @@ class PGVectorRepository(RepositoryPort):
         self._embeddings = embeddings
         self._vectorstore = PGVector(
             collection_name=self._settings.pg_vector_collection_name,
-            connection=self._settings.database_url,
+            connection=self._settings.sqlalchemy_database_url,
             embeddings=embeddings.get_langchain_embeddings(),
         )
     
@@ -48,7 +48,7 @@ class PGVectorRepository(RepositoryPort):
                 documents=langchain_docs,
                 embedding=self._embeddings.get_langchain_embeddings(),
                 collection_name=self._settings.pg_vector_collection_name,
-                connection=self._settings.database_url,
+                connection=self._settings.sqlalchemy_database_url,
                 pre_delete_collection=True,
             )
         else:
@@ -70,7 +70,7 @@ class PGVectorRepository(RepositoryPort):
     
     def delete_by_source(self, source_file: str) -> int:
         """Delete all chunks from a specific source file."""
-        engine = create_engine(self._settings.database_url)
+        engine = create_engine(self._settings.sqlalchemy_database_url)
         
         with engine.connect() as conn:
             # Get collection UUID
