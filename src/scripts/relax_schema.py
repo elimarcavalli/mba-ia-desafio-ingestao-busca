@@ -42,10 +42,10 @@ CREATE TABLE "Thread" (
 -- Step Table
 CREATE TABLE "Step" (
     "id" TEXT PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "threadId" TEXT NOT NULL, -- Removed FK
-    "parentId" TEXT, -- Removed FK
+    "name" TEXT,  -- Allow NULL
+    "type" TEXT,  -- Allow NULL
+    "threadId" TEXT,
+    "parentId" TEXT,
     "disableFeedback" BOOLEAN NOT NULL DEFAULT false,
     "streaming" BOOLEAN NOT NULL DEFAULT false,
     "waitForAnswer" BOOLEAN DEFAULT false,
@@ -65,11 +65,11 @@ CREATE TABLE "Step" (
 -- Element Table
 CREATE TABLE "Element" (
     "id" TEXT PRIMARY KEY,
-    "threadId" TEXT, -- Removed FK
-    "stepId" TEXT, -- Removed FK
+    "threadId" TEXT,
+    "stepId" TEXT,
     "metadata" JSONB NOT NULL DEFAULT '{}',
     "mime" TEXT,
-    "name" TEXT NOT NULL,
+    "name" TEXT,  -- Allow NULL
     "objectKey" TEXT,
     "url" TEXT,
     "chainlitKey" TEXT,
@@ -83,9 +83,9 @@ CREATE TABLE "Element" (
 -- Feedback Table
 CREATE TABLE "Feedback" (
     "id" TEXT PRIMARY KEY,
-    "stepId" TEXT NOT NULL, -- Removed FK
+    "stepId" TEXT,
     "name" TEXT,
-    "value" FLOAT NOT NULL,
+    "value" FLOAT,  -- Allow NULL
     "comment" TEXT
 );
 

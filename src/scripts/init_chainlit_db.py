@@ -16,6 +16,15 @@ SCHEMA = """
 -- Enable UUID extension just in case, though usually generated in app
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- AppUser Table (for authentication)
+CREATE TABLE IF NOT EXISTS "AppUser" (
+    "id" SERIAL PRIMARY KEY,
+    "username" TEXT NOT NULL UNIQUE,
+    "password_hash" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'user',
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- User Table
 CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT PRIMARY KEY,
@@ -25,26 +34,26 @@ CREATE TABLE IF NOT EXISTS "User" (
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Thread Table
+-- Thread Table (relaxed constraints for Chainlit compatibility)
 CREATE TABLE IF NOT EXISTS "Thread" (
     "id" TEXT PRIMARY KEY,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "deletedAt" TIMESTAMPTZ,
     "name" TEXT,
-    "userId" TEXT REFERENCES "User"("id") ON DELETE CASCADE,
+    "userId" TEXT,  -- Removed FK for async insert order
     "userIdentifier" TEXT,
     "tags" TEXT[],
     "metadata" JSONB NOT NULL DEFAULT '{}'
 );
 
--- Step Table
+-- Step Table (relaxed constraints for Chainlit compatibility)
 CREATE TABLE IF NOT EXISTS "Step" (
     "id" TEXT PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "threadId" TEXT NOT NULL REFERENCES "Thread"("id") ON DELETE CASCADE,
-    "parentId" TEXT REFERENCES "Step"("id") ON DELETE CASCADE,
+    "name" TEXT,  -- Chainlit sometimes sends NULL
+    "type" TEXT,  -- Chainlit sometimes sends NULL
+    "threadId" TEXT,  -- Removed FK for async insert order
+    "parentId" TEXT,  -- Removed FK for async insert order
     "disableFeedback" BOOLEAN NOT NULL DEFAULT false,
     "streaming" BOOLEAN NOT NULL DEFAULT false,
     "waitForAnswer" BOOLEAN DEFAULT false,
@@ -61,14 +70,14 @@ CREATE TABLE IF NOT EXISTS "Step" (
     "indent" INT
 );
 
--- Element Table
+-- Element Table (relaxed constraints for Chainlit compatibility)
 CREATE TABLE IF NOT EXISTS "Element" (
     "id" TEXT PRIMARY KEY,
-    "threadId" TEXT REFERENCES "Thread"("id") ON DELETE CASCADE,
-    "stepId" TEXT REFERENCES "Step"("id") ON DELETE CASCADE,
+    "threadId" TEXT,  -- Removed FK for async insert order
+    "stepId" TEXT,  -- Removed FK for async insert order
     "metadata" JSONB NOT NULL DEFAULT '{}',
     "mime" TEXT,
-    "name" TEXT NOT NULL,
+    "name" TEXT,  -- Chainlit sometimes sends NULL
     "objectKey" TEXT,
     "url" TEXT,
     "chainlitKey" TEXT,
@@ -79,12 +88,12 @@ CREATE TABLE IF NOT EXISTS "Element" (
     "props" JSONB
 );
 
--- Feedback Table
+-- Feedback Table (relaxed constraints for Chainlit compatibility)
 CREATE TABLE IF NOT EXISTS "Feedback" (
     "id" TEXT PRIMARY KEY,
-    "stepId" TEXT NOT NULL REFERENCES "Step"("id") ON DELETE CASCADE,
+    "stepId" TEXT,  -- Removed FK for async insert order
     "name" TEXT,
-    "value" FLOAT NOT NULL,
+    "value" FLOAT,  -- Chainlit sometimes sends NULL
     "comment" TEXT
 );
 

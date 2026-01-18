@@ -21,19 +21,22 @@
             "title": "Faça login para acessar",
             "form": {
                 "email": {
-                    "label": "Endereço de e-mail",
-                    "required": "E-mail é obrigatório",
-                    "placeholder": "eu@exemplo.com"
+                    "label": "Usuário",
+                    "required": "Usuário é obrigatório",
+                    "placeholder": "seu.usuario"
                 },
                 "password": {
                     "label": "Senha",
                     "required": "Senha é obrigatória"
                 },
                 "actions": {
-                    "signin": "Entrar"
+                    "signin": "Entrar",
+                    "signup": "Criar Conta"
                 },
                 "alternativeText": {
-                    "or": "OU"
+                    "or": "OU",
+                    "noAccount": "Não tem conta?",
+                    "hasAccount": "Já tem conta?"
                 }
             },
             "errors": {
@@ -50,6 +53,34 @@
                 "emailVerify": "Verifique seu e-mail, uma nova mensagem foi enviada",
                 "credentialsSignin": "Falha no login. Verifique os dados informados",
                 "sessionRequired": "Faça login para acessar esta página"
+            }
+        },
+        "signup": {
+            "title": "Criar nova conta",
+            "form": {
+                "username": {
+                    "label": "Usuário",
+                    "required": "Usuário é obrigatório",
+                    "placeholder": "Escolha um nome de usuário"
+                },
+                "password": {
+                    "label": "Senha",
+                    "required": "Senha é obrigatória",
+                    "placeholder": "Escolha uma senha"
+                },
+                "actions": {
+                    "signup": "Criar Conta",
+                    "signin": "Já tenho conta"
+                }
+            },
+            "errors": {
+                "default": "Não foi possível criar a conta",
+                "userExists": "Este usuário já existe",
+                "weakPassword": "A senha é muito fraca",
+                "invalidUsername": "Nome de usuário inválido"
+            },
+            "success": {
+                "created": "Conta criada com sucesso! Faça login."
             }
         },
         "provider": {
