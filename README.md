@@ -97,31 +97,28 @@ cd mba-ia-desafio-ingestao-busca
 cp .env.example .env
 ```
 
-Edite o arquivo `.env` com suas credenciais:
+Edite o arquivo `.env` com suas credenciais.
 
-```ini
-# Escolha o provedor: openai ou google
-LLM_PROVIDER=openai
+### 2. Início Rápido (Recomendado)
 
-# OpenAI Keys
-OPENAI_API_KEY=sk-...
+Utilize o script interativo que configura tudo para você (venv, dependências e docker):
 
-# Google Keys
-GOOGLE_API_KEY=AIza...
-
-# Banco de Dados (Padrão do Docker Compose)
-DATABASE_URL=postgresql+psycopg://user:password@localhost:5432/vectordb
+```bash
+python start.py
 ```
 
-### 2. Iniciando a Infraestrutura
+### 3. Instalação Manual (Alternativa)
 
+Caso prefira fazer passo-a-passo:
+
+#### Iniciando a Infraestrutura
 Suba o banco de dados PostgreSQL com a extensão pgvector já configurada:
 
 ```bash
 docker compose up -d
 ```
 
-### 3. Instalação de Dependências
+#### Instalação de Dependências
 
 ```bash
 python -m venv venv
@@ -130,6 +127,9 @@ source venv/bin/activate  # Linux/Mac
 
 pip install -r requirements.txt
 ```
+
+#### Executando a Aplicação
+
 
 ### 4. Executando a Aplicação
 
