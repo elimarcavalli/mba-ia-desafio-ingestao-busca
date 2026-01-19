@@ -84,7 +84,7 @@ graph TD
 O projeto inclui um **script interativo** que automatiza toda a configuração:
 
 ```bash
-python3 start.py
+python3 main.py
 ```
 
 **Menu de Opções:**
