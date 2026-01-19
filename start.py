@@ -5,12 +5,13 @@ import shutil
 import time
 from pathlib import Path
 
-# Configuration
-VENV_DIR = Path("venv")
-REQUIREMENTS_FILE = Path("requirements.txt")
-DOCKER_COMPOSE_FILE = Path("docker-compose.yml")
-APP_PATH = Path("src/presentation/web/chainlit_app.py")
-ENV_FILE = Path(".env")
+# Configuration - use absolute paths for reliability
+PROJECT_ROOT = Path(__file__).parent.resolve()
+VENV_DIR = PROJECT_ROOT / "venv"
+REQUIREMENTS_FILE = PROJECT_ROOT / "requirements.txt"
+DOCKER_COMPOSE_FILE = PROJECT_ROOT / "docker-compose.yml"
+APP_PATH = PROJECT_ROOT / "src/presentation/web/chainlit_app.py"
+ENV_FILE = PROJECT_ROOT / ".env"
 CHAINLIT_PORT = 8000
 
 COLORS = {
@@ -236,8 +237,10 @@ def step_run_app():
     
     try:
         python_cmd = get_venv_python()
-        cmd = [str(python_cmd), "-m", "chainlit", "run", str(APP_PATH), "-w", "--port", str(CHAINLIT_PORT)]
-        subprocess.run(cmd, check=True)
+        # Run Chainlit from the web directory so it can find the public folder
+        web_dir = APP_PATH.parent
+        cmd = [str(python_cmd), "-m", "chainlit", "run", "chainlit_app.py", "-w", "--port", str(CHAINLIT_PORT)]
+        subprocess.run(cmd, check=True, cwd=str(web_dir))
     except KeyboardInterrupt:
         print_color("\nServer stopped by user.", "WARNING")
     except subprocess.CalledProcessError as e:
