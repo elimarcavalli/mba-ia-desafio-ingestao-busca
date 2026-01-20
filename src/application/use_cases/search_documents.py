@@ -13,33 +13,27 @@ from src.domain.ports.llm import LLMPort
 from src.domain.exceptions import SearchError
 
 
+# PROMPT OTIMIZADO: Estrutura XML + Persona + Regras Estritas
 PROMPT_TEMPLATE = """
-CONTEXTO:
+Você é um Assistente de IA Especialista em Busca Semântica corporativa. Sua função é responder perguntas baseando-se estritamente nos documentos recuperados.
+
+<instrucoes_principais>
+1.  **Fonte da Verdade:** Use SOMENTE as informações fornecidas dentro das tags <contexto>. Ignore qualquer conhecimento prévio que você tenha sobre o mundo que não esteja no texto.
+2.  **Integridade:** Se a resposta não estiver explícita ou não puder ser deduzida com alta confiança a partir do <contexto>, você DEVE responder: "Não encontrei informações suficientes nos documentos para responder a essa pergunta."
+3.  **Objetividade:** Seja direto, profissional e conciso. Evite preâmbulos como "Com base no texto...". Vá direto ao ponto.
+4.  **Citação Implícita:** Se houver múltiplas menções ao tópico, sintetize as informações de forma coerente.
+</instrucoes_principais>
+
+<contexto>
 {contexto}
+</contexto>
 
-REGRAS:
-- Responda somente com base no CONTEXTO.
-- Se a informação não estiver explicitamente no CONTEXTO, responda:
-  "Não tenho informações necessárias para responder sua pergunta."
-- Nunca invente ou use conhecimento externo.
-- Nunca produza opiniões ou interpretações além do que está escrito.
-
-EXEMPLOS DE PERGUNTAS FORA DO CONTEXTO:
-Pergunta: "Qual é a capital da França?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-Pergunta: "Quantos clientes temos em 2024?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-Pergunta: "Você acha isso bom ou ruim?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-PERGUNTA DO USUÁRIO:
+<pergunta_usuario>
 {pergunta}
+</pergunta_usuario>
 
-RESPONDA A "PERGUNTA DO USUÁRIO"
+Resposta:
 """
-
 
 class SearchDocumentsUseCase:
     """Use case for searching documents using RAG."""
@@ -51,16 +45,22 @@ class SearchDocumentsUseCase:
         self._chain = self._build_chain()
     
     def _build_chain(self):
-        """Build the RAG chain."""
+        """Build the RAG chain with optimized formatting."""
         retriever = self._repository.get_retriever(k=self._settings.retriever_k)
         prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
         llm = self._llm.get_langchain_llm()
         
         def format_docs(docs):
-            return "\n\n---\n\n".join(doc.page_content for doc in docs)
+            return "\n".join(
+                f"<documento_id={i}>\n{doc.page_content}\n</documento_id={i}>" 
+                for i, doc in enumerate(docs)
+            )
         
         chain = (
-            {"contexto": retriever | format_docs, "pergunta": RunnablePassthrough()}
+            {
+                "contexto": retriever | format_docs, 
+                "pergunta": RunnablePassthrough()
+            }
             | prompt
             | llm
             | StrOutputParser()
