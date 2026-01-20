@@ -175,57 +175,32 @@ async def process_pdf(pdf_file, clear_first: bool = False) -> tuple[int, str]:
     return document.chunk_count, pdf_file.name
 
 
+@cl.set_starters
+async def set_starters():
+    """Define Chat Starters for the welcome screen."""
+    return [
+        cl.Starter(
+            label="📄 Enviar PDF",
+            message="/upload",
+            icon="/public/icons/upload.svg",
+        ),
+        cl.Starter(
+            label="❓ Como funciona?",
+            message="/ajuda",
+            icon="/public/icons/help.svg",
+        ),
+        cl.Starter(
+            label="💡 Exemplos de perguntas",
+            message="/exemplos",
+            icon="/public/icons/example.svg",
+        ),
+    ]
+
+
 @cl.on_chat_start
 async def start():
-    """Initialize chat session."""
+    """Initialize chat session silently - Starters handle the welcome."""
     cl.user_session.set("pdf_data", {})
-    
-    await cl.Message(
-        content="# 🔍 Sistema de Busca Semântica\n\n"
-                "Envie um arquivo **PDF** para começar.\n\n"
-                "📎 Anexe **múltiplos PDFs** para expandir o contexto!",
-        actions=[
-            cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs Carregados")
-        ]
-    ).send()
-    
-    files = await cl.AskFileMessage(
-        content="📄 **Selecione o primeiro arquivo PDF:**",
-        accept=["application/pdf"],
-        max_size_mb=50,
-        timeout=300,
-    ).send()
-    
-    if not files:
-        await cl.Message(content="❌ Nenhum arquivo selecionado.").send()
-        return
-    
-    pdf_file = files[0]
-    
-    msg = cl.Message(content=f"🔄 Processando **{pdf_file.name}**...")
-    await msg.send()
-    
-    try:
-        chunk_count, pdf_name = await process_pdf(pdf_file, clear_first=True)
-        
-        pdf_data = {pdf_name: chunk_count}
-        cl.user_session.set("pdf_data", pdf_data)
-        
-        # Persist to thread metadata
-        await update_thread_metadata()
-        
-        await cl.Message(
-            content=f"✅ **{pdf_name}** processado! ({chunk_count} chunks)\n\n"
-                    "💡 Anexe mais PDFs pelo 📎, arraste ou faça perguntas!",
-            actions=[
-                cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs"),
-            ]
-        ).send()
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        await cl.Message(content=f"❌ Erro: {str(e)}").send()
 
 
 @cl.on_message
@@ -268,8 +243,99 @@ async def main(message: cl.Message):
             return
     
     # Check for commands
-    if message.content.strip().lower() in ["/arquivos", "/pdfs", "/listar"]:
+    cmd = message.content.strip().lower()
+    
+    if cmd in ["/arquivos", "/pdfs", "/listar"]:
         await show_pdf_list()
+        return
+    
+    # Starter: Upload PDF
+    if cmd == "/upload":
+        files = await cl.AskFileMessage(
+            content="📄 **Selecione um ou mais arquivos PDF:**",
+            accept=["application/pdf"],
+            max_size_mb=50,
+            max_files=10,
+            timeout=300,
+        ).send()
+        
+        if not files:
+            await cl.Message(content="❌ Nenhum arquivo selecionado.").send()
+            return
+        
+        pdf_data = cl.user_session.get("pdf_data") or {}
+        clear_first = len(pdf_data) == 0
+        
+        for pdf_file in files:
+            msg = cl.Message(content=f"🔄 Processando **{pdf_file.name}**...")
+            await msg.send()
+            
+            try:
+                chunk_count, pdf_name = await process_pdf(pdf_file, clear_first)
+                clear_first = False
+                
+                pdf_data[pdf_name] = chunk_count
+                cl.user_session.set("pdf_data", pdf_data)
+                
+                await cl.Message(
+                    content=f"✅ **{pdf_name}** processado! ({chunk_count} chunks)",
+                    actions=[
+                        cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs"),
+                    ]
+                ).send()
+                
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                await cl.Message(content=f"❌ Erro: {str(e)}").send()
+        
+        # Persist to thread metadata
+        await update_thread_metadata()
+        
+        total_chunks = sum(pdf_data.values())
+        await cl.Message(
+            content=f"🎉 **{len(pdf_data)} PDF(s) prontos!** ({total_chunks} chunks)\n\n"
+                    "💬 Agora você pode fazer perguntas sobre os documentos.",
+        ).send()
+        return
+    
+    # Starter: Help
+    if cmd == "/ajuda":
+        await cl.Message(
+            content="# 🔍 Sistema de Busca Semântica\n\n"
+                    "Este é um sistema **RAG (Retrieval-Augmented Generation)** que responde "
+                    "perguntas com base em documentos PDF.\n\n"
+                    "## Como usar:\n\n"
+                    "1. **Envie um PDF** usando o botão 📄 ou arraste para o chat\n"
+                    "2. **Faça perguntas** sobre o conteúdo do documento\n"
+                    "3. O sistema busca trechos relevantes e gera uma resposta\n\n"
+                    "## Comandos:\n\n"
+                    "- `/upload` - Enviar novos PDFs\n"
+                    "- `/arquivos` - Ver PDFs carregados\n"
+                    "- `/ajuda` - Esta mensagem\n"
+                    "- `/exemplos` - Ver exemplos de perguntas\n\n"
+                    "> ⚠️ As respostas são baseadas **apenas** no conteúdo dos PDFs carregados.",
+            actions=[
+                cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs"),
+            ]
+        ).send()
+        return
+    
+    # Starter: Examples
+    if cmd == "/exemplos":
+        await cl.Message(
+            content="# 💡 Exemplos de Perguntas\n\n"
+                    "Após carregar seus PDFs, você pode fazer perguntas como:\n\n"
+                    "### Perguntas gerais:\n"
+                    "- *\"Qual é o tema principal do documento?\"*\n"
+                    "- *\"Faça um resumo do documento\"*\n"
+                    "- *\"Quais são os pontos principais?\"*\n\n"
+                    "### Perguntas específicas:\n"
+                    "- *\"O que o documento diz sobre [termo]?\"*\n"
+                    "- *\"Quais são as conclusões sobre [assunto]?\"*\n"
+                    "- *\"Explique o conceito de [termo] mencionado no texto\"*\n\n"
+                    "> 💡 Quanto mais específica a pergunta, melhor a resposta!",
+        ).send()
         return
     
     # Regular search

@@ -277,6 +277,7 @@ def step_kill_existing():
 
 def main_menu():
     print_color("\n=== MBA Software Engineering with AI - Project Manager ===", "HEADER")
+    print_color("GitHub: https://github.com/elimarcavalli/mba-ia-desafio-ingestao-busca.git", "HEADER")
     print("1. Start System (Normal)")
     print("2. Force Restart (Kill existing + Start)")
     print("3. Quick Launch (Skip checks)")

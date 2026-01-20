@@ -44,7 +44,8 @@ class PGVectorRepository(RepositoryPort):
         
         if clear_existing:
             # Use from_documents which can clear collection
-            PGVector.from_documents(
+            # IMPORTANT: Reassign to keep _vectorstore in sync with new collection
+            self._vectorstore = PGVector.from_documents(
                 documents=langchain_docs,
                 embedding=self._embeddings.get_langchain_embeddings(),
                 collection_name=self._settings.pg_vector_collection_name,

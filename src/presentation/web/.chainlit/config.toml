@@ -99,7 +99,7 @@ reaction_on_message_received = false
 
 [UI]
 # Name of the assistant.
-name = "Busca Semântica"
+name = "DocMind - Busca Semântica"
 
 default_theme = "dark"
 
