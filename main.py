@@ -189,10 +189,170 @@ def step_install_requirements():
     run_command(f'"{pip_cmd}" install -r "{REQUIREMENTS_FILE}"')
     print_color("Dependencies checked.", "GREEN")
 
+# --- Docker Validation Functions ---
+
+def check_docker_installed():
+    """Check if Docker CLI is installed and available in PATH."""
+    return shutil.which("docker") is not None
+
+def check_docker_running():
+    """Check if Docker daemon is running."""
+    try:
+        result = subprocess.run(
+            ["docker", "info"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+def get_docker_install_instructions():
+    """Get platform-specific Docker installation instructions."""
+    if sys.platform == "darwin":
+        return """
+╔══════════════════════════════════════════════════════════════╗
+║  DOCKER NÃO INSTALADO - INSTRUÇÕES PARA macOS               ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  1. Baixe o Docker Desktop em:                               ║
+║     https://www.docker.com/products/docker-desktop/          ║
+║                                                              ║
+║  2. Abra o arquivo .dmg e arraste para Applications          ║
+║                                                              ║
+║  3. Abra o Docker Desktop e complete o setup inicial         ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+"""
+    elif sys.platform == "win32":
+        return """
+╔══════════════════════════════════════════════════════════════╗
+║  DOCKER NÃO INSTALADO - INSTRUÇÕES PARA Windows             ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  1. Baixe o Docker Desktop em:                               ║
+║     https://www.docker.com/products/docker-desktop/          ║
+║                                                              ║
+║  2. Execute o instalador e siga as instruções                ║
+║                                                              ║
+║  3. Reinicie o computador se solicitado                      ║
+║                                                              ║
+║  4. Abra o Docker Desktop                                    ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+"""
+    else:  # Linux
+        return """
+╔══════════════════════════════════════════════════════════════╗
+║  DOCKER NÃO INSTALADO - INSTRUÇÕES PARA Linux               ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  Execute os comandos abaixo:                                 ║
+║                                                              ║
+║    curl -fsSL https://get.docker.com | sh                    ║
+║    sudo usermod -aG docker $USER                             ║
+║                                                              ║
+║  Depois faça logout/login para aplicar as permissões.        ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+"""
+
+def open_docker_desktop():
+    """Attempt to open Docker Desktop application."""
+    try:
+        if sys.platform == "darwin":
+            subprocess.run(["open", "-a", "Docker"], check=False)
+            return True
+        elif sys.platform == "win32":
+            # Try common installation paths
+            paths = [
+                r"C:\Program Files\Docker\Docker\Docker Desktop.exe",
+                r"C:\Program Files (x86)\Docker\Docker\Docker Desktop.exe",
+            ]
+            for path in paths:
+                if os.path.exists(path):
+                    subprocess.Popen([path], shell=True)
+                    return True
+            # Try via start command
+            subprocess.run(["cmd", "/c", "start", "", "Docker Desktop"], check=False)
+            return True
+        else:  # Linux
+            print_color("No Linux, inicie o Docker com:", "BLUE")
+            print("  sudo systemctl start docker")
+            return False
+    except Exception:
+        return False
+
+def wait_for_docker(timeout=60):
+    """Wait for Docker daemon to start."""
+    print_color(f"Aguardando Docker iniciar (timeout: {timeout}s)...", "BLUE")
+    start = time.time()
+    while time.time() - start < timeout:
+        if check_docker_running():
+            print()  # New line after dots
+            return True
+        print(".", end="", flush=True)
+        time.sleep(2)
+    print()  # New line after dots
+    return False
+
+def step_ensure_docker():
+    """Ensure Docker is installed and running before proceeding."""
+    print_color("\n[Docker] Verificando Docker...", "HEADER")
+    
+    # Check if Docker is installed
+    if not check_docker_installed():
+        print_color("❌ Docker não está instalado!", "FAIL")
+        print(get_docker_install_instructions())
+        print_color("Por favor, instale o Docker e execute este script novamente.", "WARNING")
+        return False
+    
+    print_color("✓ Docker CLI encontrado.", "GREEN")
+    
+    # Check if Docker daemon is running
+    if check_docker_running():
+        print_color("✓ Docker daemon está rodando.", "GREEN")
+        return True
+    
+    # Docker is installed but not running
+    print_color("⚠ Docker instalado, mas o daemon não está rodando.", "WARNING")
+    
+    if sys.platform == "linux":
+        print_color("\nNo Linux, execute manualmente:", "BLUE")
+        print("  sudo systemctl start docker")
+        print("\nE depois execute este script novamente.")
+        return False
+    
+    # Offer to start Docker Desktop (Mac/Windows)
+    start_docker = input("\nDeseja tentar abrir o Docker Desktop? (S/n): ").strip().lower()
+    
+    if start_docker in ["", "s", "sim", "y", "yes"]:
+        print_color("Abrindo Docker Desktop...", "BLUE")
+        open_docker_desktop()
+        
+        if wait_for_docker(60):
+            print_color("✓ Docker daemon iniciado com sucesso!", "GREEN")
+            return True
+        else:
+            print_color("❌ Timeout: Docker não iniciou a tempo.", "FAIL")
+            print_color("Por favor, abra o Docker Desktop manualmente e tente novamente.", "WARNING")
+            return False
+    else:
+        print_color("Por favor, inicie o Docker Desktop e execute novamente.", "WARNING")
+        return False
+
+
 def step_docker_compose():
     print_color("\n[3/4] Starting Infrastructure (Docker)...", "HEADER")
     if not DOCKER_COMPOSE_FILE.exists():
         print_color("docker-compose.yml not found!", "FAIL")
+        sys.exit(1)
+
+    # Ensure Docker is installed and running BEFORE attempting compose
+    if not step_ensure_docker():
+        print_color("\n❌ Não foi possível continuar sem o Docker.", "FAIL")
+        print_color("Corrija o problema acima e execute novamente.", "WARNING")
         sys.exit(1)
 
     # Check config validity
