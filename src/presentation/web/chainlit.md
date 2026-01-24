@@ -1,63 +1,60 @@
-# 🤖 Sistema de Busca Semântica (RAG) | Semantic Search System
+# 🤖 Welcome to DocMind!
 
-**MBA Engenharia de Software com IA - Full Cycle** | **MBA Software Engineering with AI - Full Cycle**
-
----
-
-## 📖 Sobre o Projeto | About the Project
-
-🇧🇷 Este é um sistema de **Retrieval-Augmented Generation (RAG)** capaz de:
-
-- 📄 **Ingerir** documentos PDF, processando e armazenando embeddings
-- 🔍 **Buscar** informações semanticamente relevantes
-- 💬 **Responder** perguntas utilizando apenas o contexto dos documentos
-
-🇺🇸 This is a **Retrieval-Augmented Generation (RAG)** system capable of:
-
-- 📄 **Ingesting** PDF documents, processing and storing embeddings
-- 🔍 **Searching** semantically relevant information
-- 💬 **Answering** questions using only the context from documents
+**Your intelligent assistant for PDF documents** - Ask questions and get accurate answers based on your documents!
 
 ---
 
-## ✨ Principais Funcionalidades | Key Features
+## � What is this?
 
-- 🔍 **Busca Semântica | Semantic Search** with PostgreSQL + pgvector
-- 🏗️ **Clean Architecture** (Hexagonal)
-- 🔌 **Multi-Provider** (OpenAI / Google Gemini)
-- ⚡ **Alta Performance | High Performance** with asynchronous processing
+**DocMind transforms your PDFs into an intelligent assistant.** No more manual searching through lengthy documents!
 
----
-
-## 💡 Como Usar | How to Use
-
-🇧🇷 **Português:**
-1. **Faça upload** de um documento PDF usando o ícone de anexo 📎
-2. **Aguarde** o processamento do documento
-3. **Pergunte** sobre o conteúdo do documento
-
-🇺🇸 **English:**
-1. **Upload** a PDF document using the attachment icon 📎
-2. **Wait** for document processing
-3. **Ask** questions about the document content
-
-> 🇧🇷 O assistente responderá apenas com informações dos documentos carregados.
-> 🇺🇸 The assistant will only respond with information from loaded documents.
+Upload a PDF, ask questions in natural language, and get instant answers based exclusively on the document content.
 
 ---
 
-## 🛠️ Tecnologias | Technologies
+## 🆚 Why RAG?
 
-| Componente | Tecnologia |
-|------------|------------|
-| Backend | Python 3.12+ |
-| Framework | LangChain |
-| Vector DB | PostgreSQL + pgvector |
-| Interface | Chainlit |
-| Container | Docker |
+| Traditional Approach                  | DocMind (RAG)                       |
+| ------------------------------------- | ----------------------------------- |
+| Keyword search finds only exact terms | ✅ Understands synonyms and context |
+| ChatGPT invents information           | ✅ Answers based 100% on your docs  |
+| Manual reading is slow                | ✅ Instant, accurate responses      |
 
 ---
 
-**Desenvolvido por | Developed by [Elimar Cavalli](https://github.com/elimarcavalli)**
+## 💡 How to Use
 
-*Desafio do MBA em Engenharia de Software com IA - Full Cycle*
+**It's super easy!**
+
+1. **📎 Upload a PDF** - Click the attachment icon or drag & drop
+2. **⏳ Wait a moment** - We'll process your document (usually takes seconds)
+3. **💬 Start asking!** - Type any question about your document
+
+> 💡 **Tip:** The assistant only uses information from your uploaded documents - no hallucinations!
+
+---
+
+## 🎯 Example Questions
+
+- "What is the main topic of this document?"
+- "What does the text say about [specific subject]?"
+- "Summarize the main points"
+- "What are the conclusions presented?"
+
+---
+
+## 🛠️ Powered By
+
+| Component       | Technology             |
+| --------------- | ---------------------- |
+| Backend         | Python 3.12+           |
+| AI Framework    | LangChain              |
+| Vector Database | PostgreSQL + pgvector  |
+| Interface       | Chainlit               |
+| LLM Providers   | OpenAI / Google Gemini |
+
+---
+
+**Built by [Elimar Cavalli](https://github.com/elimarcavalli)**
+
+_MBA in Software Engineering with AI - Full Cycle_

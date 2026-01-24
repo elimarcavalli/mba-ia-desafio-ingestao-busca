@@ -1,212 +1,171 @@
-# 🤖 MBA Engenharia de Software com IA - Desafio Ingestão e Busca
+# 🤖 DocMind - RAG Semantic Search System
 
-> **Sistema de Ingestão e Busca Semântica (RAG)** desenvolvido com **Clean Architecture**, **LangChain** e **PostgreSQL (pgvector)**.
+> **Your intelligent assistant for PDF documents** - Ask questions and get accurate answers based on your documents!
 
 ![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)
 ![LangChain](https://img.shields.io/badge/LangChain-Integration-green.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-336791.svg)
 ![Docker](https://img.shields.io/badge/Docker-Container-2496ED.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ---
 
-## 📖 Sobre o Projeto
+## 💡 What is DocMind?
 
-Este projeto foi desenvolvido como parte do desafio do **MBA em Engenharia de Software com IA da Full Cycle**. O objetivo é criar um sistema robusto de **Retrieval-Augmented Generation (RAG)** capaz de:
+**DocMind transforms any PDF into an intelligent assistant that answers your questions instantly.** No more manual searching through lengthy documents!
 
-1.  **Ingerir** documentos PDF, processando e armazenando seus embeddings de forma eficiente.
-2.  **Buscar** informações semanticamente relevantes nos documentos ingeridos.
-3.  **Responder** perguntas do usuário utilizando apenas o contexto dos documentos, evitando alucinações.
+Imagine having an expert who has read your entire document and can answer any question about it in seconds - that's DocMind.
 
-O sistema suporta múltiplos provedores de IA (**OpenAI** e **Google Gemini**) e utiliza **PostgreSQL com pgvector** para persistência vetorial de alta performance.
+### 🆚 Why is RAG superior?
 
----
+| Approach               | Limitations                                   | DocMind (RAG)                                |
+| ---------------------- | --------------------------------------------- | -------------------------------------------- |
+| **Keyword search**     | Finds only exact terms, ignores context       | ✅ Understands synonyms and semantic context |
+| **ChatGPT directly**   | Invents information, no access to your docs   | ✅ Answers based 100% on your document       |
+| **Manual reading**     | Slow, tiring, error-prone                     | ✅ Instant, accurate, never forgets          |
+| **Traditional Ctrl+F** | Literal, doesn't understand complex questions | ✅ Answers questions in natural language     |
 
-## ✨ Principais Funcionalidades
+### 🔄 How it works:
 
--   **🔍 Busca Semântica**: Utiliza o poder do `pgvector` para buscas por similaridade de cosseno.
--   **🏗️ Clean Architecture**: Código segue princípios de Clean e Hexagonal Architecture.
--   **🔌 Multi-Provider**: Alterne facilmente entre `OpenAI` e `Google Gemini`.
--   **🚀 Interface Web**: Interface moderna e interativa construída com **Chainlit**.
--   **⚡ Alta Performance**: Processamento assíncrono e banco de dados relacional robusto.
-
----
-
-## 🏗️ Arquitetura do Sistema
-
-```mermaid
-graph TD
-    subgraph Presentation ["Presentation Layer"]
-        CLI[Command Line Interface]
-        Web[Chainlit Web App]
-    end
-
-    subgraph Application ["Application Layer"]
-        Ingest[IngestDocument UseCase]
-        Search[SearchDocuments UseCase]
-    end
-
-    subgraph Domain ["Domain Layer (Core)"]
-        Entities[Entities: Document, Chunk]
-        Ports[Ports: Repository, LLM, Embeddings]
-    end
-
-    subgraph Infrastructure ["Infrastructure Layer"]
-        PG[PGVector Repository]
-        OAI[OpenAI Adapter]
-        Gemini[Google Adapter]
-    end
-
-    CLI --> Ingest
-    CLI --> Search
-    Web --> Ingest
-    Web --> Search
-    
-    Ingest --> Ports
-    Search --> Ports
-    
-    PG -.-> Ports
-    OAI -.-> Ports
-    Gemini -.-> Ports
-```
-
--   **Domain**: Regras de negócio e interfaces (Ports). Não depende de frameworks externos.
--   **Application**: Casos de uso (`Ingestão`, `Busca`).
--   **Infrastructure**: Adaptadores (Banco de dados, APIs de LLM).
--   **Presentation**: Interfaces para o usuário final.
+1. 📄 You upload a PDF
+2. 🧠 The system processes and "understands" the content using vector embeddings
+3. 💬 You ask questions in natural language
+4. 🔍 The system searches for the most semantically relevant passages
+5. ✨ The AI generates a precise answer based only on the document
 
 ---
 
-## 🚀 Como Executar
+## 🎯 What is it for?
 
-### ⚡ Início Rápido (Recomendado)
+**Practical use cases:**
 
-O projeto inclui um **script interativo** que automatiza toda a configuração:
+- 📚 **Students**: Ask questions about textbooks, books, and scientific articles
+- 💼 **Professionals**: Quickly consult contracts, reports, and technical documentation
+- 🔬 **Researchers**: Extract information from papers and academic documents
+- 📋 **Companies**: Analyze manuals, policies, and corporate documents
+- 🎓 **Teachers**: Prepare materials and clarify doubts about extensive content
+
+**Example questions:**
+
+- "What is the main topic of this document?"
+- "What does the text say about [specific subject]?"
+- "Summarize the main points"
+- "What are the conclusions presented?"
+
+---
+
+## 🚀 How to Get Started
+
+**Requirements:** [Python 3.12+](https://www.python.org/downloads/) and [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed
+
+It's super simple! Just 3 steps:
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/elimarcavalli/mba-ia-desafio-ingestao-busca.git
+
+# 2. Enter the folder
+cd mba-ia-desafio-ingestao-busca
+
+# 3. Run the system
 python3 main.py
 ```
 
-**Menu de Opções:**
+### 📺 What you'll see when starting
 
-| Opção | Descrição |
-|-------|-----------|
-| **1. Start System** | Cria `venv`, instala dependências, sobe Docker e inicia a aplicação |
-| **2. Force Restart** | Mata processos travados e reinicia |
-| **3. Quick Launch** | Pula verificações e inicia diretamente (para desenvolvimento) |
-| **4. Stop All** | Encerra todos os processos |
-| **5. Reset System** | Apaga Docker volumes, venv e configurações |
-| **6. Exit** | Sai do script |
+When you run `python3 main.py`, an interactive menu will appear:
 
-**Configuração Assistida:**
-- Wizard pergunta qual provedor de IA usar (OpenAI ou Google Gemini)
-- Solicita a API Key correspondente
-- Gera automaticamente as demais configurações
+<pre>
+<span style="color: #d946ef; font-weight: bold;">=== MBA Software Engineering with AI - Project Manager ===
+GitHub: https://github.com/elimarcavalli/mba-ia-desafio-ingestao-busca.git</span>
+1. Start System (Normal)
+2. Force Restart (Kill existing + Start)
+3. Quick Launch (Skip checks)
+4. Stop All Processes (Kill Only)
+5. Reset System (Wipe User Data & Config Only)
+6. Exit
 
----
+Select option (1-6):
+</pre>
 
-### 📋 Instalação Manual
+**For first run, choose option `1`**
 
-Se preferir configurar manualmente:
+The system will:
 
-#### 1. Clone e Configure
+- ✅ Automatically create Python virtual environment
+- ✅ Install all necessary dependencies
+- ✅ Configure PostgreSQL database via Docker
+- ✅ Ask for your API key (OpenAI or Google Gemini)
+- ✅ Start the web interface at `http://localhost:8000`
 
-```bash
-git clone https://github.com/elimarcavalli/mba-ia-desafio-ingestao-busca.git
-cd mba-ia-desafio-ingestao-busca
-cp .env.example .env
-# Edite o arquivo .env com suas credenciais
-```
-
-#### 2. Inicie a Infraestrutura
-
-```bash
-docker compose up -d
-```
-
-#### 3. Instale Dependências
-
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-pip install -r requirements.txt
-```
-
-#### 4. Execute a Aplicação
-
-**Interface Web (Chainlit):**
-```bash
-cd src/presentation/web
-chainlit run chainlit_app.py --port 8000
-```
-
-**Interface CLI:**
-```bash
-python -m src.main
-```
+**Done!** In less than 2 minutes you'll be chatting with your documents! 🎉
 
 ---
 
-## 📈 Escalabilidade
+## ⚙️ Prerequisites
 
-### Banco de Dados Robusto (PostgreSQL)
-- **Persistência ACID**: Dados seguros mesmo se o container cair
-- **Escalabilidade**: Suporta milhões de vetores com indexação HNSW
-- **Dados Relacionais**: Cruzamento de metadados com busca semântica
+- **[Python 3.12+](https://www.python.org/downloads/)** installed
+- **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** installed and running
+- **API Key** from [OpenAI](https://platform.openai.com/api-keys) or [Google Gemini](https://aistudio.google.com/app/apikey)
 
-### Arquitetura Modular
-- **Troca de Modelo**: Substituir GPT-4 por Claude ou Llama requer apenas novo Adapter
-- **Troca de Vector Store**: Migrar para Qdrant ou Pinecone exige nova implementação de `RepositoryPort`
-
-### Pronto para Produção
-- Containerização Docker pronta para Kubernetes
-- Serviços podem ser escalados independentemente
+> 💡 **Tip**: The `main.py` script checks everything automatically and guides you if something is missing!
 
 ---
 
-## 🧪 Testes
+## 🎨 Web Interface
 
-Execute os testes unitários e de integração:
+After starting, access `http://localhost:8000` and you'll see a modern and intuitive interface where you can:
 
-```bash
-pytest src/tests -v
-```
-
----
-
-## 📁 Estrutura do Projeto
-
-```
-src/
-├── domain/              # Entidades e Ports (interfaces)
-├── application/         # Casos de Uso
-├── infrastructure/      # Adaptadores (DB, LLM, Auth)
-├── presentation/        # CLI e Web (Chainlit)
-├── config/              # Configurações
-└── scripts/             # Scripts de manutenção
-```
+- 📎 **Drag and drop** PDFs for upload
+- 💬 **Ask questions** in natural language
+- 📚 **Manage** multiple documents
+- 🔍 **View history** of conversations
+- ⚡ **Get answers** in seconds
 
 ---
 
-## 🛠️ Tecnologias
+## 🛠️ Technologies
 
-| Componente | Tecnologia |
-|------------|------------|
-| Linguagem | Python 3.12+ |
-| Framework IA | LangChain |
-| Vector Database | PostgreSQL + pgvector |
-| Interface Web | Chainlit |
-| Containerização | Docker / Docker Compose |
-| Provedores LLM | OpenAI, Google Gemini |
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT.
+| Component        | Technology             |
+| ---------------- | ---------------------- |
+| Language         | Python 3.12+           |
+| AI Framework     | LangChain              |
+| Vector Database  | PostgreSQL + pgvector  |
+| Web Interface    | Chainlit               |
+| Containerization | Docker                 |
+| LLM Providers    | OpenAI / Google Gemini |
 
 ---
 
-**Desenvolvido por [Elimar Cavalli](https://github.com/elimarcavalli)**
+## 🏗️ Architecture
 
-*Desafio do MBA em Engenharia de Software com IA - Full Cycle*
+The system follows **Clean Architecture** (Hexagonal Architecture):
+
+- **Domain**: Pure business rules, no external dependencies
+- **Application**: Use cases (Ingestion and Search)
+- **Infrastructure**: Adapters for database and AI APIs
+- **Presentation**: Web interface (Chainlit) and CLI
+
+This ensures:
+
+- ✅ Testable and maintainable code
+- ✅ Easy switching of AI providers
+- ✅ Scalability and performance
+
+---
+
+## 📖 Additional Documentation
+
+- **[AGENTS.md](AGENTS.md)** - Instructions for AI assistants
+- **[docs/](docs/)** - In-depth technical documentation
+
+---
+
+## 📄 License
+
+This project is under the MIT license.
+
+---
+
+**Developed by [Elimar Cavalli](https://github.com/elimarcavalli)**
+
+_MBA Challenge in Software Engineering with AI - Full Cycle_
