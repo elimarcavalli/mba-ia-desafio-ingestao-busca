@@ -13,26 +13,43 @@ from src.domain.ports.llm import LLMPort
 from src.domain.exceptions import SearchError
 
 
-# PROMPT OTIMIZADO: Estrutura XML + Persona + Regras Estritas
 PROMPT_TEMPLATE = """
-Você é um Assistente de IA Especialista em Busca Semântica corporativa. Sua função é responder perguntas baseando-se estritamente nos documentos recuperados.
+You are an AI Assistant Expert in Corporate Semantic Search. Your role is to provide precise, deterministic answers based **strictly** on the retrieved documents provided in the context.
 
-<instrucoes_principais>
-1.  **Fonte da Verdade:** Use SOMENTE as informações fornecidas dentro das tags <contexto>. Ignore qualquer conhecimento prévio que você tenha sobre o mundo que não esteja no texto.
-2.  **Integridade:** Se a resposta não estiver explícita ou não puder ser deduzida com alta confiança a partir do <contexto>, você DEVE responder: "Não encontrei informações suficientes nos documentos para responder a essa pergunta."
-3.  **Objetividade:** Seja direto, profissional e conciso. Evite preâmbulos como "Com base no texto...". Vá direto ao ponto.
-4.  **Citação Implícita:** Se houver múltiplas menções ao tópico, sintetize as informações de forma coerente.
-</instrucoes_principais>
+### **Operational Guidelines**
 
-<contexto>
-{contexto}
-</contexto>
+1. **Source of Truth:** Use **ONLY** the information provided within the `<context>` tags. Do not use external knowledge or facts not present in the text.
+2. **Strict Integrity:** If the information is missing, incomplete, or cannot be logically deduced from the context, you **MUST** respond with: "I did not find sufficient information in the documents to answer this question."
+3. **No Preambles:** Do not use conversational filler such as "Based on the documents provided..." or "According to the text...". Start the answer immediately.
+4. **Synthesis:** If the topic is mentioned in multiple parts of the context, consolidate the information into a coherent and structured response.
+5. **Language Match:** You must respond in the **same language** used by the user in the `<user_question>`.
+6. **Reasoning Process:** Before providing the final answer, perform a brief internal check (Chain-of-Thought) to ensure every claim in your response is mapped to a specific piece of information in the context.
 
-<pergunta_usuario>
-{pergunta}
-</pergunta_usuario>
+### **Negative Constraints**
 
-Resposta:
+* **NO** Hallucinations: Do not invent dates, names, or technical details.
+* **NO** Outside Knowledge: If the context says the sky is green, your answer must reflect that the sky is green.
+* **NO** Assumptions: Do not infer intent or meaning that is not explicitly stated.
+
+---
+
+### **Context**
+
+{context}
+
+---
+
+### **User Question**
+
+{question}
+
+---
+
+**Answer:**
+
+---
+
+Would you like me to adjust the **strictness level** of the fallback message or modify the **output format** (e.g., JSON or specific bullet point styles)?
 """
 
 class SearchDocumentsUseCase:
@@ -52,14 +69,14 @@ class SearchDocumentsUseCase:
         
         def format_docs(docs):
             return "\n".join(
-                f"<documento_id={i}>\n{doc.page_content}\n</documento_id={i}>" 
+                f"<document_id={i}>\n{doc.page_content}\n</document_id={i}>" 
                 for i, doc in enumerate(docs)
             )
         
         chain = (
             {
-                "contexto": retriever | format_docs, 
-                "pergunta": RunnablePassthrough()
+                "context": retriever | format_docs, 
+                "question": RunnablePassthrough()
             }
             | prompt
             | llm

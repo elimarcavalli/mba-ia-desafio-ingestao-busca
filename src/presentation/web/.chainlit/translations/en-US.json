@@ -58,7 +58,7 @@
     },
     "chat": {
         "input": {
-            "placeholder": "Type your message here...",
+            "placeholder": "Upload PDF and ask questions about the content",
             "actions": {
                 "send": "Send message",
                 "stop": "Stop Task",

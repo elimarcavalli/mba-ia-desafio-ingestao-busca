@@ -61,19 +61,19 @@ async def on_chat_resume(thread: dict):
             
             total_chunks = sum(pdf_data.values())
             await cl.Message(
-                content=f"♻️ **Sessão restaurada!**\n\n"
-                        f"📚 {len(pdf_data)} PDF(s) no contexto ({total_chunks} chunks)\n"
-                        f"💬 Continue fazendo perguntas!",
+                content=f"♻️ **Welcome back!** Your session has been restored! 🎉\n\n"
+                        f"📚 You have **{len(pdf_data)} PDF(s)** ready to chat with ({total_chunks} chunks loaded)\n"
+                        f"💬 Feel free to continue asking questions!",
                 actions=[
-                    cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs Carregados")
+                    cl.Action(name="show_pdfs", payload={}, label="📚 View My PDFs")
                 ]
             ).send()
         except Exception as e:
-            await cl.Message(content=f"⚠️ Erro ao restaurar contexto: {str(e)}").send()
+            await cl.Message(content=f"⚠️ Error restoring context: {str(e)}").send()
     else:
         await cl.Message(
-            content="⚠️ Sessão restaurada, mas sem PDFs no contexto.\n"
-                    "Envie um PDF para começar.",
+            content="👋 **Welcome back!** Your session was restored, but no PDFs are loaded yet.\n\n"
+                    "📄 Upload a PDF to start chatting with your documents!",
         ).send()
 
 
@@ -115,10 +115,10 @@ async def show_pdf_list():
     pdf_data = cl.user_session.get("pdf_data") or {}
     
     if not pdf_data:
-        await cl.Message(content="📭 Nenhum PDF carregado ainda.").send()
+        await cl.Message(content="📦 **No PDFs loaded yet!** Upload a document to get started. 🚀").send()
         return
     
-    content = "📚 **PDFs no Contexto:**\n\n"
+    content = "📚 **Your Document Library:**\n\n"
     actions = []
     
     for pdf_name, chunks in pdf_data.items():
@@ -127,15 +127,15 @@ async def show_pdf_list():
             cl.Action(
                 name="delete_pdf",
                 payload={"pdf_name": pdf_name},
-                label=f"❌ Excluir {pdf_name}",
+                label=f"❌ Delete {pdf_name}",
             )
         )
     
     total_chunks = sum(pdf_data.values())
-    content += f"\n📊 **Total:** {len(pdf_data)} arquivos, {total_chunks} chunks"
+    content += f"\n📊 **Total:** {len(pdf_data)} document{'s' if len(pdf_data) != 1 else ''} • {total_chunks} chunks"
     
     actions.append(
-        cl.Action(name="refresh_list", payload={}, label="🔄 Atualizar Lista")
+        cl.Action(name="refresh_list", payload={}, label="🔄 Refresh List")
     )
     
     await cl.Message(content=content, actions=actions).send()
@@ -146,7 +146,7 @@ async def handle_delete_pdf(action: cl.Action):
     """Handle PDF deletion."""
     pdf_name = action.payload.get("pdf_name")
     
-    msg = cl.Message(content=f"🗑️ Excluindo **{pdf_name}**...")
+    msg = cl.Message(content=f"🗑️ Removing **{pdf_name}** from your library...")
     await msg.send()
     
     try:
@@ -170,13 +170,13 @@ async def handle_delete_pdf(action: cl.Action):
             cl.user_session.set("search_use_case", None)
         
         await cl.Message(
-            content=f"✅ **{pdf_name}** excluído! ({deleted} chunks removidos)"
+            content=f"✅ **Done!** {pdf_name} has been removed ({deleted} chunks deleted)"
         ).send()
         
         await show_pdf_list()
         
     except Exception as e:
-        await cl.Message(content=f"❌ Erro ao excluir: {str(e)}").send()
+        await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
 
 
 @cl.action_callback("refresh_list")
@@ -215,18 +215,18 @@ async def set_starters():
     """Define Chat Starters for the welcome screen."""
     return [
         cl.Starter(
-            label="📄 Enviar PDF",
+            label="📄 Upload PDF",
             message="/upload",
             icon="/public/icons/upload.svg",
         ),
         cl.Starter(
-            label="❓ Como funciona?",
-            message="/ajuda",
+            label="🚀 How does it work?",
+            message="/help",
             icon="/public/icons/help.svg",
         ),
         cl.Starter(
-            label="💡 Exemplos de perguntas",
-            message="/exemplos",
+            label="💡 See example questions",
+            message="/examples",
             icon="/public/icons/example.svg",
         ),
     ]
@@ -251,7 +251,7 @@ async def main(message: cl.Message):
             clear_first = len(pdf_data) == 0
             
             for pdf_el in pdf_files:
-                msg = cl.Message(content=f"🔄 Adicionando **{pdf_el.name}**...")
+                msg = cl.Message(content=f"🚀 Processing **{pdf_el.name}**... This will just take a moment!")
                 await msg.send()
                 
                 try:
@@ -262,15 +262,15 @@ async def main(message: cl.Message):
                     cl.user_session.set("pdf_data", pdf_data)
                     
                     await cl.Message(
-                        content=f"✅ **{pdf_name}** adicionado! ({chunk_count} chunks)",
+                        content=f"✅ **Success!** {pdf_name} is ready ({chunk_count} chunks) 🎉",
                         actions=[
-                            cl.Action(name="show_pdfs", payload={}, label="📚 Ver Todos PDFs"),
+                            cl.Action(name="show_pdfs", payload={}, label="📚 View All Documents"),
                         ]
                     ).send()
                     
                 except Exception as e:
                     print(f"Error deleting PDF: {e}")
-                    await cl.Message(content=f"❌ Erro: {str(e)}").send()
+                    await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
             
             # Persist all added PDFs to thread metadata
             await update_thread_metadata()
@@ -280,14 +280,14 @@ async def main(message: cl.Message):
     # Check for commands
     cmd = message.content.strip().lower()
     
-    if cmd in ["/arquivos", "/pdfs", "/listar"]:
+    if cmd in ["/files", "/arquivos", "/pdfs", "/listar"]:
         await show_pdf_list()
         return
     
     # Starter: Upload PDF
     if cmd == "/upload":
         files = await cl.AskFileMessage(
-            content="📄 **Selecione um ou mais arquivos PDF:**",
+            content="📂 **Select your PDF files:**\n\nYou can choose multiple documents at once!",
             accept=["application/pdf"],
             max_size_mb=50,
             max_files=10,
@@ -295,14 +295,14 @@ async def main(message: cl.Message):
         ).send()
         
         if not files:
-            await cl.Message(content="❌ Nenhum arquivo selecionado.").send()
+            await cl.Message(content="❌ No files selected. Try again when you're ready! 😊").send()
             return
         
         pdf_data = cl.user_session.get("pdf_data") or {}
         clear_first = len(pdf_data) == 0
         
         for pdf_file in files:
-            msg = cl.Message(content=f"🔄 Processando **{pdf_file.name}**...")
+            msg = cl.Message(content=f"🚀 Processing **{pdf_file.name}**... Hang tight!")
             await msg.send()
             
             try:
@@ -313,63 +313,65 @@ async def main(message: cl.Message):
                 cl.user_session.set("pdf_data", pdf_data)
                 
                 await cl.Message(
-                    content=f"✅ **{pdf_name}** processado! ({chunk_count} chunks)",
+                    content=f"✅ **{pdf_name}** is ready to chat! ({chunk_count} chunks) 🎉",
                     actions=[
-                        cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs"),
+                        cl.Action(name="show_pdfs", payload={}, label="📚 View All Documents"),
                     ]
                 ).send()
                 
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                await cl.Message(content=f"❌ Erro: {str(e)}").send()
+                await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
         
         # Persist to thread metadata
         await update_thread_metadata()
         
         total_chunks = sum(pdf_data.values())
         await cl.Message(
-            content=f"🎉 **{len(pdf_data)} PDF(s) prontos!** ({total_chunks} chunks)\n\n"
-                    "💬 Agora você pode fazer perguntas sobre os documentos.",
+            content=f"🎉 **All set!** You have **{len(pdf_data)} document{'s' if len(pdf_data) != 1 else ''}** ready ({total_chunks} chunks)\n\n"
+                    "💬 Start asking questions about your documents!",
         ).send()
         return
     
     # Starter: Help
-    if cmd == "/ajuda":
+    if cmd == "/help":
         await cl.Message(
-            content="# 🔍 Sistema de Busca Semântica\n\n"
-                    "Este é um sistema **RAG (Retrieval-Augmented Generation)** que responde "
-                    "perguntas com base em documentos PDF.\n\n"
-                    "## Como usar:\n\n"
-                    "1. **Envie um PDF** usando o botão 📄 ou arraste para o chat\n"
-                    "2. **Faça perguntas** sobre o conteúdo do documento\n"
-                    "3. O sistema busca trechos relevantes e gera uma resposta\n\n"
-                    "## Comandos:\n\n"
-                    "- `/upload` - Enviar novos PDFs\n"
-                    "- `/arquivos` - Ver PDFs carregados\n"
-                    "- `/ajuda` - Esta mensagem\n"
-                    "- `/exemplos` - Ver exemplos de perguntas\n\n"
-                    "> ⚠️ As respostas são baseadas **apenas** no conteúdo dos PDFs carregados.",
+            content="## 🚀 Welcome to Your Smart Document Assistant!\n\n"
+                    "This is a **RAG (Retrieval-Augmented Generation)** system - think of it as your personal "
+                    "research assistant that reads your PDFs and answers your questions!\n\n"
+                    "## 🎯 How it works:\n\n"
+                    "1. **📄 Upload your PDFs** - Use the upload button or simply drag files into the chat\n"
+                    "2. **❓ Ask anything** - Type your questions in natural language\n"
+                    "3. **🤖 Get smart answers** - The AI finds relevant info and crafts a precise response\n\n"
+                    "## 🛠️ Available Commands:\n\n"
+                    "- `/upload` - Add new documents to your library\n"
+                    "- `/files` - See all your loaded documents\n"
+                    "- `/help` - Show this helpful guide\n"
+                    "- `/examples` - Get inspired with example questions\n\n"
+                    "💡 **Pro tip:** Answers come exclusively from your uploaded documents - no hallucinations, just facts!",
             actions=[
-                cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs"),
+                cl.Action(name="show_pdfs", payload={}, label="📚 View My Documents"),
             ]
         ).send()
         return
     
     # Starter: Examples
-    if cmd == "/exemplos":
+    if cmd == "/examples":
         await cl.Message(
-            content="# 💡 Exemplos de Perguntas\n\n"
-                    "Após carregar seus PDFs, você pode fazer perguntas como:\n\n"
-                    "### Perguntas gerais:\n"
-                    "- *\"Qual é o tema principal do documento?\"*\n"
-                    "- *\"Faça um resumo do documento\"*\n"
-                    "- *\"Quais são os pontos principais?\"*\n\n"
-                    "### Perguntas específicas:\n"
-                    "- *\"O que o documento diz sobre [termo]?\"*\n"
-                    "- *\"Quais são as conclusões sobre [assunto]?\"*\n"
-                    "- *\"Explique o conceito de [termo] mencionado no texto\"*\n\n"
-                    "> 💡 Quanto mais específica a pergunta, melhor a resposta!",
+            content="## 💡 Question Ideas to Get Started\n\n"
+                    "Not sure what to ask? Here are some examples to inspire you!\n\n"
+                    "### 🌐 General Questions:\n"
+                    "- *\"What's the main topic of this document?\"*\n"
+                    "- *\"Give me a quick summary\"*\n"
+                    "- *\"What are the key takeaways?\"*\n"
+                    "- *\"List the main points discussed\"*\n\n"
+                    "### 🎯 Specific Questions:\n"
+                    "- *\"What does the document say about [your topic]?\"*\n"
+                    "- *\"What are the conclusions regarding [subject]?\"*\n"
+                    "- *\"Explain the concept of [term] from the text\"*\n"
+                    "- *\"Find all mentions of [keyword]\"*\n\n"
+                    "🎓 **Remember:** The more specific your question, the better the answer! Feel free to ask follow-up questions too.",
         ).send()
         return
     
@@ -378,9 +380,10 @@ async def main(message: cl.Message):
     
     if not search_use_case:
         await cl.Message(
-            content="⚠️ Envie um PDF primeiro.",
+            content="📄 **No documents loaded yet!**\n\n"
+                    "Upload a PDF first to start asking questions. Click the 📄 button above or use `/upload`!",
             actions=[
-                cl.Action(name="show_pdfs", payload={}, label="📚 Ver PDFs")
+                cl.Action(name="show_pdfs", payload={}, label="📚 View Documents")
             ]
         ).send()
         return
@@ -393,5 +396,5 @@ async def main(message: cl.Message):
         msg.content = result.answer
         await msg.update()
     except Exception as e:
-        msg.content = f"❌ Erro: {str(e)}"
+        msg.content = f"❌ **Oops!** Something went wrong: {str(e)}"
         await msg.update()

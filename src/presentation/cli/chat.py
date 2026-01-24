@@ -30,24 +30,24 @@ def select_pdf() -> str | None:
     pdfs = list_pdfs()
     
     if not pdfs:
-        print("❌ Nenhum arquivo PDF encontrado no diretório atual.")
+        print("❌ No PDF files found in the current directory.")
         return None
     
-    print("\n📁 PDFs disponíveis:")
+    print("\n📁 Available PDFs:")
     for i, pdf in enumerate(pdfs, 1):
         print(f"  {i}. {pdf}")
     
     while True:
         try:
-            choice = input(f"\nSelecione o número (1-{len(pdfs)}): ").strip()
+            choice = input(f"\n✨ Select a number (1-{len(pdfs)}): ").strip()
             if not choice:
                 return None
             index = int(choice) - 1
             if 0 <= index < len(pdfs):
                 return pdfs[index]
-            print("⚠️ Número inválido.")
+            print("⚠️ Invalid number.")
         except ValueError:
-            print("⚠️ Digite um número válido.")
+            print("⚠️ Please enter a valid number.")
         except KeyboardInterrupt:
             return None
 
@@ -57,17 +57,17 @@ def main():
     load_dotenv()
     
     print("=" * 50)
-    print("🔍 Sistema de Busca Semântica - CLI")
+    print("🔍 RAG Semantic Search System - CLI")
     print("=" * 50)
     
     # Select PDF
     pdf_file = select_pdf()
     if not pdf_file:
-        print("👋 Até logo!")
+        print("👋 See you later!")
         return
     
-    print(f"\n📄 PDF selecionado: {pdf_file}")
-    print("🔄 Iniciando ingestão...")
+    print(f"\n📄 Selected PDF: {pdf_file}")
+    print("🔄 Starting ingestion...")
     
     try:
         # Get dependencies
@@ -78,37 +78,37 @@ def main():
         ingest_use_case = IngestDocumentUseCase(repository)
         document = ingest_use_case.execute(pdf_file, clear_existing=True)
         
-        print(f"✅ Ingestão concluída! {document.chunk_count} chunks criados.")
+        print(f"✅ Ingestion complete! {document.chunk_count} chunks created.")
         
         # Create search use case
         search_use_case = SearchDocumentsUseCase(repository, llm)
         
         print("\n" + "=" * 50)
-        print("💬 Chat iniciado! Digite 'sair' para encerrar.")
+        print("💬 Chat started! Type 'exit' to quit.")
         print("=" * 50 + "\n")
         
         # Chat loop
         while True:
             try:
-                question = input("Você: ").strip()
+                question = input("You: ").strip()
                 
                 if not question:
                     continue
                 
                 if question.lower() in ["sair", "exit", "quit", "q"]:
-                    print("👋 Até logo!")
+                    print("👋 See you later!")
                     break
                 
-                print("🔍 Buscando...")
+                print("🔍 Searching...")
                 result = search_use_case.execute(question)
-                print(f"\n🤖 Assistente:\n{result.answer}\n")
+                print(f"\n🤖 Assistant:\n{result.answer}\n")
                 
             except KeyboardInterrupt:
-                print("\n👋 Até logo!")
+                print("\n👋 See you later!")
                 break
                 
     except Exception as e:
-        print(f"❌ Erro: {e}")
+        print(f"❌ Error: {e}")
         sys.exit(1)
 
 

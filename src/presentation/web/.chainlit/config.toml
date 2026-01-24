@@ -99,12 +99,12 @@ reaction_on_message_received = false
 
 [UI]
 # Name of the assistant.
-name = "DocMind - Busca Semântica"
+name = "DocMind - RAG Semantic Search"
 
 default_theme = "dark"
 
-# Language is now controlled by the language-selector.js
-# language = "pt-BR"
+# Set default language to English
+language = "en-US"
 
 # layout = "wide"
 
@@ -125,7 +125,7 @@ cot = "full"
 
 # Specify a JavaScript file that can be used to customize the user interface.
 # The JavaScript file can be served from the public directory.
-custom_js = "/public/language-selector.js"
+# custom_js = "/public/custom.js"
 
 # The style of alert boxes. Can be "classic" or "modern".
 alert_style = "classic"
