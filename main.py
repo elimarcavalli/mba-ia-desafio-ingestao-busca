@@ -34,7 +34,9 @@ def run_command(command, check=True, capture_output=False):
             check=check,
             shell=True,
             text=True,
-            capture_output=capture_output
+            capture_output=capture_output,
+            encoding='utf-8',
+            errors='replace'
         )
         return result
     except subprocess.CalledProcessError as e:
@@ -105,7 +107,7 @@ GOOGLE_API_KEY={api_key if llm_provider == 'google' else ''}
 OPENAI_EMBEDDING_MODEL='text-embedding-3-small'
 GOOGLE_EMBEDDING_MODEL='models/embedding-001'
 """
-    ENV_FILE.write_text(env_content)
+    ENV_FILE.write_text(env_content, encoding='utf-8')
     print_color("\nConfiguration saved to .env!", "GREEN")
 
 
@@ -371,14 +373,14 @@ def step_docker_compose():
     print_color("Initializing Chainlit database tables...", "BLUE")
     python_cmd = get_venv_python()
     try:
-        run_command(f'"{python_cmd}" -c "import sys; sys.path.insert(0, \'.\'); exec(open(\'src/scripts/init_chainlit_db.py\').read())"', check=True)
+        run_command(f'"{python_cmd}" -c "import sys; sys.path.insert(0, \'.\'); exec(open(\'src/scripts/init_chainlit_db.py\', encoding=\'utf-8\').read())"', check=True)
     except Exception as e:
         print_color(f"Warning: Could not initialize Chainlit tables: {e}", "WARNING")
     
     # Apply migrations to fix any constraint issues
     print_color("Ensuring schema compatibility...", "BLUE")
     try:
-        run_command(f'"{python_cmd}" -c "import sys; sys.path.insert(0, \'.\'); exec(open(\'src/scripts/migrate_chainlit_schema.py\').read())"', check=True, capture_output=True)
+        run_command(f'"{python_cmd}" -c "import sys; sys.path.insert(0, \'.\'); exec(open(\'src/scripts/migrate_chainlit_schema.py\', encoding=\'utf-8\').read())"', check=True, capture_output=True)
     except Exception:
         pass  # Silent - migrations are idempotent
     

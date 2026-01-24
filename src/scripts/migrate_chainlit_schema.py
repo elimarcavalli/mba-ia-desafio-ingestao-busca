@@ -3,6 +3,14 @@
 Migration script to fix Chainlit schema constraints.
 Removes NOT NULL constraints that cause errors when Chainlit sends NULL values.
 """
+import sys
+import io
+
+# Ensure UTF-8 output on Windows (cp1252 can't handle emojis)
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 import asyncio
 import os
 import asyncpg
