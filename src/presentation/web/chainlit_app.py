@@ -6,10 +6,28 @@ Run with: chainlit run chainlit_app.py --port 8000
 """
 import os
 import sys
+import asyncio
+import logging
 
 # Add project root to path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, PROJECT_ROOT)
+
+# Suppress noisy asyncio ConnectionResetError on Windows
+# This is a known issue with Proactor event loop when WebSocket connections close
+if sys.platform == 'win32':
+    # Filter out ConnectionResetError from asyncio logs
+    class ConnectionResetFilter(logging.Filter):
+        def filter(self, record):
+            if record.exc_info:
+                exc_type = record.exc_info[0]
+                if exc_type is ConnectionResetError:
+                    return False
+            if 'ConnectionResetError' in record.getMessage():
+                return False
+            return True
+
+    logging.getLogger('asyncio').addFilter(ConnectionResetFilter())
 
 import chainlit as cl
 from dotenv import load_dotenv
@@ -60,18 +78,35 @@ async def on_chat_resume(thread: dict):
 
 
 async def update_thread_metadata():
-    """Update thread metadata with current pdf_data."""
+    """Update thread metadata with current pdf_data.
+
+    This is a best-effort operation - if it fails, the session still works,
+    but chat resume may not restore the full context.
+    """
     try:
         pdf_data = cl.user_session.get("pdf_data") or {}
-        
+
         # Get thread_id from session context
-        if hasattr(cl.context.session, "thread_id"):
-            thread_id = cl.context.session.thread_id
-            if thread_id:
-                # Update thread metadata
-                await cl.Thread(id=thread_id, metadata={"pdf_data": pdf_data}).update()
-    except Exception as e:
-        print(f"Warning: Failed to update thread metadata: {e}")
+        if not hasattr(cl.context, 'session') or not hasattr(cl.context.session, "thread_id"):
+            return  # No session context available, skip silently
+
+        thread_id = cl.context.session.thread_id
+        if not thread_id:
+            return  # No thread_id, skip silently
+
+        # Try to update thread metadata using Chainlit's data layer
+        # This may fail if data layer is not fully configured
+        try:
+            thread = cl.Thread(id=thread_id, metadata={"pdf_data": pdf_data})
+            if hasattr(thread, 'update'):
+                await thread.update()
+        except (AttributeError, TypeError):
+            # cl.Thread or update() not available in this Chainlit version
+            pass
+
+    except Exception:
+        # Silently ignore - thread metadata is optional for core functionality
+        pass
 
 
 
