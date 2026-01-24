@@ -1,14 +1,63 @@
-# Welcome to Chainlit! 🚀🤖
+# 🤖 Sistema de Busca Semântica (RAG) | Semantic Search System
 
-Hi there, Developer! 👋 We're excited to have you on board. Chainlit is a powerful tool designed to help you prototype, debug and share applications built on top of LLMs.
+**MBA Engenharia de Software com IA - Full Cycle** | **MBA Software Engineering with AI - Full Cycle**
 
-## Useful Links 🔗
+---
 
-- **Documentation:** Get started with our comprehensive [Chainlit Documentation](https://docs.chainlit.io) 📚
-- **Discord Community:** Join our friendly [Chainlit Discord](https://discord.gg/k73SQ3FyUh) to ask questions, share your projects, and connect with other developers! 💬
+## 📖 Sobre o Projeto | About the Project
 
-We can't wait to see what you create with Chainlit! Happy coding! 💻😊
+🇧🇷 Este é um sistema de **Retrieval-Augmented Generation (RAG)** capaz de:
 
-## Welcome screen
+- 📄 **Ingerir** documentos PDF, processando e armazenando embeddings
+- 🔍 **Buscar** informações semanticamente relevantes
+- 💬 **Responder** perguntas utilizando apenas o contexto dos documentos
 
-To modify the welcome screen, edit the `chainlit.md` file at the root of your project. If you do not want a welcome screen, just leave this file empty.
+🇺🇸 This is a **Retrieval-Augmented Generation (RAG)** system capable of:
+
+- 📄 **Ingesting** PDF documents, processing and storing embeddings
+- 🔍 **Searching** semantically relevant information
+- 💬 **Answering** questions using only the context from documents
+
+---
+
+## ✨ Principais Funcionalidades | Key Features
+
+- 🔍 **Busca Semântica | Semantic Search** with PostgreSQL + pgvector
+- 🏗️ **Clean Architecture** (Hexagonal)
+- 🔌 **Multi-Provider** (OpenAI / Google Gemini)
+- ⚡ **Alta Performance | High Performance** with asynchronous processing
+
+---
+
+## 💡 Como Usar | How to Use
+
+🇧🇷 **Português:**
+1. **Faça upload** de um documento PDF usando o ícone de anexo 📎
+2. **Aguarde** o processamento do documento
+3. **Pergunte** sobre o conteúdo do documento
+
+🇺🇸 **English:**
+1. **Upload** a PDF document using the attachment icon 📎
+2. **Wait** for document processing
+3. **Ask** questions about the document content
+
+> 🇧🇷 O assistente responderá apenas com informações dos documentos carregados.
+> 🇺🇸 The assistant will only respond with information from loaded documents.
+
+---
+
+## 🛠️ Tecnologias | Technologies
+
+| Componente | Tecnologia |
+|------------|------------|
+| Backend | Python 3.12+ |
+| Framework | LangChain |
+| Vector DB | PostgreSQL + pgvector |
+| Interface | Chainlit |
+| Container | Docker |
+
+---
+
+**Desenvolvido por | Developed by [Elimar Cavalli](https://github.com/elimarcavalli)**
+
+*Desafio do MBA em Engenharia de Software com IA - Full Cycle*

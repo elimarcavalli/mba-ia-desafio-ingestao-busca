@@ -89,7 +89,7 @@
     },
     "chat": {
         "input": {
-            "placeholder": "Digite sua mensagem aqui...",
+            "placeholder": "Faça upload de um PDF e faça perguntas sobre ele...",
             "actions": {
                 "send": "Enviar mensagem",
                 "stop": "Parar",
