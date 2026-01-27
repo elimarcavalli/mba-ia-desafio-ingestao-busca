@@ -74,8 +74,8 @@ def configure_env():
     provider = ""
     while provider not in ["1", "2"]:
         print("\nSelect your LLM Provider:")
-        print("1. OpenAI")
-        print("2. Google Gemini")
+        print("1. OpenAI (https://platform.openai.com/api-keys)")
+        print("2. Google Gemini (https://aistudio.google.com/api-keys)")
         provider = input("Choice (1/2): ").strip()
 
     llm_provider = "openai" if provider == "1" else "google"
