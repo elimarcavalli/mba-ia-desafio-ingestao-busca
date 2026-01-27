@@ -1,0 +1,263 @@
+# 🔌 5. Estendendo o Sistema
+
+A Clean Architecture permite adicionar novos provedores sem alterar regras de negócio.
+
+Este guia mostra o passo a passo completo usando **Anthropic Claude** como exemplo.
+
+---
+
+## 📋 Visão Geral
+
+Para adicionar um novo provedor de IA, você precisa modificar 5 arquivos:
+
+| #   | Arquivo                                            | Alteração                 |
+| --- | -------------------------------------------------- | ------------------------- |
+| 1   | `requirements.txt`                                 | Adicionar dependência     |
+| 2   | `src/infrastructure/adapters/`                     | Criar novo adapter        |
+| 3   | `src/config/settings.py`                           | Adicionar configurações   |
+| 4   | `src/infrastructure/factories/provider_factory.py` | Registrar adapter         |
+| 5   | `main.py`                                          | Adicionar opção no wizard |
+
+---
+
+## 🚀 Passo a Passo: Adicionando Anthropic Claude
+
+### Passo 1: Atualizar requirements.txt
+
+Adicione a dependência do LangChain para Anthropic:
+
+```text
+# LangChain
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+langchain-postgres
+langchain-openai
+langchain-google-genai
+langchain-anthropic  # <- ADICIONAR
+```
+
+---
+
+### Passo 2: Criar o Adapter
+
+Crie o arquivo `src/infrastructure/adapters/anthropic_llm.py`:
+
+```python
+"""
+Anthropic LLM adapter.
+Implements LLMPort for Anthropic Claude.
+"""
+from langchain_anthropic import ChatAnthropic
+
+from src.config.settings import get_settings
+from src.domain.ports.llm import LLMPort
+
+
+class AnthropicLLMAdapter(LLMPort):
+    """Anthropic Claude LLM adapter."""
+
+    def __init__(self):
+        settings = get_settings()
+        self._llm = ChatAnthropic(
+            model=settings.anthropic_model,
+            anthropic_api_key=settings.anthropic_api_key,
+            temperature=0,
+            timeout=settings.llm_timeout,
+        )
+
+    def generate(self, prompt: str) -> str:
+        """Generate response for prompt."""
+        response = self._llm.invoke(prompt)
+        return response.content
+
+    def get_langchain_llm(self) -> ChatAnthropic:
+        """Get LangChain LLM object."""
+        return self._llm
+```
+
+---
+
+### Passo 3: Adicionar Configurações
+
+Edite `src/config/settings.py`:
+
+```python
+# Adicione "anthropic" ao Literal de llm_provider
+llm_provider: Literal["openai", "google", "anthropic"] = "openai"
+
+# Adicione as configurações após a seção do Google
+# Anthropic
+anthropic_api_key: str | None = None
+anthropic_model: str = "claude-sonnet-4-5"
+```
+
+---
+
+### Passo 4: Registrar na Factory
+
+Edite `src/infrastructure/factories/provider_factory.py`:
+
+**4.1. Adicione o import no topo:**
+
+```python
+from src.infrastructure.adapters.anthropic_llm import AnthropicLLMAdapter
+```
+
+**4.2. Adicione no método `get_embeddings()`:**
+
+> ⚠️ Anthropic não tem API de embeddings própria, então usamos OpenAI.
+
+```python
+elif settings.llm_provider == "anthropic":
+    # Anthropic uses OpenAI embeddings
+    if not settings.openai_api_key:
+        raise ProviderNotConfiguredError("OpenAI API key required for embeddings when using Anthropic")
+    cls._embeddings = OpenAIEmbeddingsAdapter()
+```
+
+**4.3. Adicione no método `get_llm()`:**
+
+```python
+elif settings.llm_provider == "anthropic":
+    if not settings.anthropic_api_key:
+        raise ProviderNotConfiguredError("Anthropic API key not configured")
+    cls._llm = AnthropicLLMAdapter()
+```
+
+---
+
+### Passo 5: Atualizar o Wizard (main.py)
+
+Edite a função `configure_env()` no `main.py`:
+
+**5.1. Adicione a opção 3 no menu:**
+
+```python
+while provider not in ["1", "2", "3"]:
+    print("\nSelect your LLM Provider:")
+    print("1. OpenAI (https://platform.openai.com/api-keys)")
+    print("2. Google Gemini (https://aistudio.google.com/api-keys)")
+    print("3. Anthropic Claude (https://platform.claude.com/settings/keys)")
+    provider = input("Choice (1/2/3): ").strip()
+```
+
+**5.2. Atualize a lógica de seleção:**
+
+```python
+if provider == "1":
+    llm_provider = "openai"
+elif provider == "2":
+    llm_provider = "google"
+else:
+    llm_provider = "anthropic"
+```
+
+**5.3. Atualize a coleta de API keys:**
+
+```python
+openai_api_key = ""
+google_api_key = ""
+anthropic_api_key = ""
+
+if llm_provider == "openai":
+    openai_api_key = input("Enter your OPENAI_API_KEY: ").strip()
+elif llm_provider == "google":
+    google_api_key = input("Enter your GOOGLE_API_KEY: ").strip()
+else:  # anthropic
+    anthropic_api_key = input("Enter your ANTHROPIC_API_KEY: ").strip()
+    print_color("\nNote: Anthropic requires OpenAI for embeddings.", "WARNING")
+    openai_api_key = input("Enter your OPENAI_API_KEY (for embeddings): ").strip()
+```
+
+**5.4. Atualize o template do .env:**
+
+```python
+env_content = f"""# Generated by main.py
+LLM_PROVIDER={llm_provider}
+
+DATABASE_URL={db_base_url}
+PG_VECTOR_COLLECTION_NAME=document_chunks
+PDF_PATH=document.pdf
+
+# API Keys
+OPENAI_API_KEY={openai_api_key}
+GOOGLE_API_KEY={google_api_key}
+ANTHROPIC_API_KEY={anthropic_api_key}
+
+# Models (Defaults)
+OPENAI_EMBEDDING_MODEL='text-embedding-3-small'
+GOOGLE_EMBEDDING_MODEL='models/embedding-001'
+ANTHROPIC_MODEL='claude-sonnet-4-5'
+"""
+```
+
+---
+
+## 📋 Modelos Claude Disponíveis
+
+| Modelo              | Uso                |
+| ------------------- | ------------------ |
+| `claude-haiku-4-5`  | Rápido e econômico |
+| `claude-sonnet-4-5` | Balanceado         |
+| `claude-opus-4-5`   | Mais inteligente   |
+
+---
+
+## ✅ Resultado
+
+Após completar todos os passos:
+
+1. Rode `python3 main.py`
+2. Escolha a opção 5 (Reset)
+3. Escolha a opção 1 (Start)
+4. Selecione opção 3 (Anthropic)
+5. Insira as API keys
+
+O sistema usará Claude para geração e OpenAI apenas para embeddings.
+
+**Arquivos que NÃO precisam ser alterados:**
+
+- `search_documents.py`
+- `chainlit_app.py`
+- Qualquer teste de domínio
+
+---
+
+# 🤖 Teste a Escalabilidade!
+
+Quer ver o poder da Clean Architecture em ação?
+
+Peça para seu agente de IA implementar o suporte a Anthropic Claude usando apenas este documento como referência:
+
+```
+Implemente @docs/pt-BR/5-EXTENDING-SYSTEM.md
+```
+
+O agente adicionará suporte ao Anthropic Claude sem precisar de explicações adicionais.
+
+# 🚀 Pronto. Agora você tem três provedores de IA.
+
+## 📚 Outros Provedores Disponíveis
+
+O LangChain suporta dezenas de provedores. Alguns populares:
+
+| Provedor         | Pacote                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| OpenAI           | [langchain-openai](https://python.langchain.com/docs/integrations/providers/openai)         |
+| Google Gemini    | [langchain-google-genai](https://python.langchain.com/docs/integrations/providers/google)   |
+| Anthropic Claude | [langchain-anthropic](https://python.langchain.com/docs/integrations/providers/anthropic)   |
+| AWS Bedrock      | [langchain-aws](https://python.langchain.com/docs/integrations/providers/aws)               |
+| Ollama (local)   | [langchain-ollama](https://python.langchain.com/docs/integrations/providers/ollama)         |
+| Groq             | [langchain-groq](https://python.langchain.com/docs/integrations/providers/groq)             |
+| MistralAI        | [langchain-mistralai](https://python.langchain.com/docs/integrations/providers/mistralai)   |
+| Cohere           | [langchain-cohere](https://python.langchain.com/docs/integrations/providers/cohere)         |
+| xAI (Grok)       | [langchain-xai](https://python.langchain.com/docs/integrations/providers/xai)               |
+| DeepSeek         | [langchain-deepseek](https://python.langchain.com/docs/integrations/providers/deepseek)     |
+| Perplexity       | [langchain-perplexity](https://python.langchain.com/docs/integrations/providers/perplexity) |
+| Fireworks        | [langchain-fireworks](https://python.langchain.com/docs/integrations/providers/fireworks)   |
+
+**Lista completa:** [python.langchain.com/docs/integrations/chat](https://python.langchain.com/docs/integrations/chat/)
+
+**Para referência de como implementar cada provedor, acesse a respectiva documentação do LangChain.**
