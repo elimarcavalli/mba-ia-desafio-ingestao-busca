@@ -58,7 +58,6 @@ async def on_chat_resume(thread: dict):
             llm = ProviderFactory.get_llm()
             search_use_case = SearchDocumentsUseCase(repository, llm)
             cl.user_session.set("search_use_case", search_use_case)
-            
             total_chunks = sum(pdf_data.values())
             await cl.Message(
                 content=f"♻️ **Welcome back!** Your session has been restored! 🎉\n\n"
@@ -202,11 +201,6 @@ async def process_pdf(pdf_file, clear_first: bool = False) -> tuple[int, str]:
         clear_existing=clear_first
     )
     
-    # Create/update search use case
-    llm = ProviderFactory.get_llm()
-    search_use_case = SearchDocumentsUseCase(repository, llm)
-    cl.user_session.set("search_use_case", search_use_case)
-    
     return document.chunk_count, pdf_file.name
 
 
@@ -269,14 +263,20 @@ async def main(message: cl.Message):
                     ).send()
                     
                 except Exception as e:
-                    print(f"Error deleting PDF: {e}")
+                    print(f"Error processing PDF: {e}")
                     await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
-            
+
+            # Create search use case after all PDFs are processed
+            repository = ProviderFactory.get_repository()
+            llm = ProviderFactory.get_llm()
+            search_use_case = SearchDocumentsUseCase(repository, llm)
+            cl.user_session.set("search_use_case", search_use_case)
+
             # Persist all added PDFs to thread metadata
             await update_thread_metadata()
-            
+
             return
-    
+
     # Check for commands
     cmd = message.content.strip().lower()
     
@@ -324,9 +324,14 @@ async def main(message: cl.Message):
                 traceback.print_exc()
                 await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
         
+        # Create search use case after all PDFs are processed
+        repository = ProviderFactory.get_repository()
+        llm = ProviderFactory.get_llm()
+        search_use_case = SearchDocumentsUseCase(repository, llm)
+        cl.user_session.set("search_use_case", search_use_case)
+
         # Persist to thread metadata
         await update_thread_metadata()
-        
         total_chunks = sum(pdf_data.values())
         await cl.Message(
             content=f"🎉 **All set!** You have **{len(pdf_data)} document{'s' if len(pdf_data) != 1 else ''}** ready ({total_chunks} chunks)\n\n"

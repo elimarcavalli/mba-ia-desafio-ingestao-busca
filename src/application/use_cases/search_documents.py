@@ -19,7 +19,7 @@ You are an AI Assistant Expert in Corporate Semantic Search. Your role is to pro
 ### **Operational Guidelines**
 
 1. **Source of Truth:** Use **ONLY** the information provided within the `<context>` tags. Do not use external knowledge or facts not present in the text.
-2. **Strict Integrity:** If the information is missing, incomplete, or cannot be logically deduced from the context, you **MUST** respond with: "I did not find sufficient information in the documents to answer this question."
+2. **Strict Integrity:** If the information is missing, incomplete, or cannot be logically deduced from the context, you **MUST** respond with: "I did not find sufficient information in the documents to answer this question, try using more specific terms."
 3. **No Preambles:** Do not use conversational filler such as "Based on the documents provided..." or "According to the text...". Start the answer immediately.
 4. **Synthesis:** If the topic is mentioned in multiple parts of the context, consolidate the information into a coherent and structured response.
 5. **Language Match:** You must respond in the **same language** used by the user in the `<user_question>`.
@@ -46,21 +46,17 @@ You are an AI Assistant Expert in Corporate Semantic Search. Your role is to pro
 ---
 
 **Answer:**
-
----
-
-Would you like me to adjust the **strictness level** of the fallback message or modify the **output format** (e.g., JSON or specific bullet point styles)?
 """
 
 class SearchDocumentsUseCase:
     """Use case for searching documents using RAG."""
-    
+
     def __init__(self, repository: RepositoryPort, llm: LLMPort):
         self._repository = repository
         self._llm = llm
         self._settings = get_settings()
         self._chain = self._build_chain()
-    
+
     def _build_chain(self):
         """Build the RAG chain with optimized formatting."""
         retriever = self._repository.get_retriever(k=self._settings.retriever_k)
@@ -68,10 +64,13 @@ class SearchDocumentsUseCase:
         llm = self._llm.get_langchain_llm()
         
         def format_docs(docs):
-            return "\n".join(
-                f"<document_id={i}>\n{doc.page_content}\n</document_id={i}>" 
-                for i, doc in enumerate(docs)
-            )
+            formatted = []
+            for i, doc in enumerate(docs):
+                source = doc.metadata.get("source_file", "unknown")
+                formatted.append(
+                    f'<document source="{source}" id={i}>\n{doc.page_content}\n</document>'
+                )
+            return "\n".join(formatted)
         
         chain = (
             {

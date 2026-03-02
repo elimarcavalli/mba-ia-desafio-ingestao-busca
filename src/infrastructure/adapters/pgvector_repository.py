@@ -7,7 +7,7 @@ from typing import List
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document as LangchainDocument
 from langchain_postgres import PGVector
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 
 from src.config.settings import get_settings
 from src.domain.entities.document import DocumentChunk
@@ -27,9 +27,19 @@ class PGVectorRepository(RepositoryPort):
             embeddings=embeddings.get_langchain_embeddings(),
         )
     
+    def _reset_session(self) -> None:
+        """Reset the vectorstore's scoped_session to avoid stale ORM state.
+
+        Workaround for langchain-postgres scoped_session bug where
+        the internal SQLAlchemy session accumulates stale ORM objects
+        across calls, causing NotNullViolation on sequential inserts.
+        """
+        if hasattr(self._vectorstore, 'session_maker'):
+            self._vectorstore.session_maker.remove()
+
     def add_documents(
-        self, 
-        chunks: List[DocumentChunk], 
+        self,
+        chunks: List[DocumentChunk],
         clear_existing: bool = False
     ) -> int:
         """Add document chunks to the repository."""
@@ -41,10 +51,8 @@ class PGVectorRepository(RepositoryPort):
             )
             for chunk in chunks
         ]
-        
+
         if clear_existing:
-            # Use from_documents which can clear collection
-            # IMPORTANT: Reassign to keep _vectorstore in sync with new collection
             self._vectorstore = PGVector.from_documents(
                 documents=langchain_docs,
                 embedding=self._embeddings.get_langchain_embeddings(),
@@ -53,14 +61,17 @@ class PGVectorRepository(RepositoryPort):
                 pre_delete_collection=True,
             )
         else:
-            # Add to existing collection
+            # Clean session before insert to avoid stale state
+            self._reset_session()
             self._vectorstore.add_documents(langchain_docs)
-        
+
         return len(chunks)
     
     def search(self, query: str, k: int = 10) -> List[DocumentChunk]:
-        """Search for similar documents."""
-        results = self._vectorstore.similarity_search(query, k=k)
+        """Search for similar documents using MMR for diversity."""
+        results = self._vectorstore.max_marginal_relevance_search(
+            query, k=k, fetch_k=k * 3
+        )
         return [
             DocumentChunk(
                 content=doc.page_content,
@@ -71,8 +82,8 @@ class PGVectorRepository(RepositoryPort):
     
     def delete_by_source(self, source_file: str) -> int:
         """Delete all chunks from a specific source file."""
-        engine = create_engine(self._settings.sqlalchemy_database_url)
-        
+        engine = self._vectorstore._engine
+
         with engine.connect() as conn:
             # Get collection UUID
             result = conn.execute(
@@ -99,5 +110,8 @@ class PGVectorRepository(RepositoryPort):
             return result.rowcount
     
     def get_retriever(self, k: int = 10):
-        """Get a LangChain retriever."""
-        return self._vectorstore.as_retriever(search_kwargs={"k": k})
+        """Get a LangChain retriever using MMR for diversity."""
+        return self._vectorstore.as_retriever(
+            search_type="mmr",
+            search_kwargs={"k": k, "fetch_k": k * 3},
+        )
