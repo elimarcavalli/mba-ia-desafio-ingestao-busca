@@ -8,6 +8,7 @@ from src.domain.entities.document import Document, DocumentChunk, SearchResult
 from src.domain.ports.embeddings import EmbeddingsPort
 from src.domain.ports.llm import LLMPort
 from src.domain.ports.repository import RepositoryPort
+from src.domain.ports.document_loader import DocumentLoaderPort
 
 
 @pytest.fixture
@@ -58,3 +59,16 @@ def sample_chunks() -> list[DocumentChunk]:
 def sample_document(sample_chunks) -> Document:
     """Create sample document."""
     return Document(name="test.pdf", chunks=sample_chunks)
+
+
+@pytest.fixture
+def mock_document_loader() -> DocumentLoaderPort:
+    """Create mock document loader port."""
+    from langchain_core.documents import Document as LangchainDocument
+    from src.infrastructure.adapters.document_loader import MultiFormatDocumentLoader
+    mock = Mock(spec=DocumentLoaderPort)
+    mock.load.return_value = [
+        LangchainDocument(page_content="Test content from loader.", metadata={"source": "test.txt"})
+    ]
+    mock.supported_extensions.return_value = MultiFormatDocumentLoader().supported_extensions()
+    return mock

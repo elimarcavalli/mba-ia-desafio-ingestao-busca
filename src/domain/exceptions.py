@@ -32,3 +32,8 @@ class ProviderNotConfiguredError(DomainException):
 class InvalidDocumentError(DomainException):
     """Raised when a document is invalid or corrupted."""
     pass
+
+
+class UnsupportedFormatError(DomainException):
+    """Raised when a document format is not supported."""
+    pass

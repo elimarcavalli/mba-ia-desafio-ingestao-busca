@@ -1,11 +1,12 @@
 """
 Provider factory.
-Creates instances of embeddings, LLM, and repository based on configuration.
+Creates instances of embeddings, LLM, repository, and document loader based on configuration.
 """
 from src.config.settings import get_settings
 from src.domain.ports.embeddings import EmbeddingsPort
 from src.domain.ports.llm import LLMPort
 from src.domain.ports.repository import RepositoryPort
+from src.domain.ports.document_loader import DocumentLoaderPort
 from src.domain.exceptions import ProviderNotConfiguredError
 
 from src.infrastructure.adapters.openai_embeddings import OpenAIEmbeddingsAdapter
@@ -13,14 +14,16 @@ from src.infrastructure.adapters.google_embeddings import GoogleEmbeddingsAdapte
 from src.infrastructure.adapters.openai_llm import OpenAILLMAdapter
 from src.infrastructure.adapters.google_llm import GoogleLLMAdapter
 from src.infrastructure.adapters.pgvector_repository import PGVectorRepository
+from src.infrastructure.adapters.document_loader import MultiFormatDocumentLoader
 
 
 class ProviderFactory:
     """Factory for creating provider instances."""
-    
+
     _embeddings: EmbeddingsPort | None = None
     _llm: LLMPort | None = None
     _repository: RepositoryPort | None = None
+    _document_loader: DocumentLoaderPort | None = None
     
     @classmethod
     def get_embeddings(cls) -> EmbeddingsPort:
@@ -76,8 +79,18 @@ class ProviderFactory:
         return cls._repository
     
     @classmethod
+    def get_document_loader(cls) -> DocumentLoaderPort:
+        """Get document loader instance."""
+        if cls._document_loader is not None:
+            return cls._document_loader
+
+        cls._document_loader = MultiFormatDocumentLoader()
+        return cls._document_loader
+
+    @classmethod
     def reset(cls) -> None:
         """Reset all cached instances. Useful for testing."""
         cls._embeddings = None
         cls._llm = None
         cls._repository = None
+        cls._document_loader = None

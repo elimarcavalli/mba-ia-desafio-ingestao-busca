@@ -6,8 +6,8 @@ Run with: chainlit run chainlit_app.py --port 8000
 """
 import os
 import sys
-import asyncio
 import logging
+from pathlib import Path
 
 # Add project root to path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -16,7 +16,6 @@ sys.path.insert(0, PROJECT_ROOT)
 # Suppress noisy asyncio ConnectionResetError on Windows
 # This is a known issue with Proactor event loop when WebSocket connections close
 if sys.platform == 'win32':
-    # Filter out ConnectionResetError from asyncio logs
     class ConnectionResetFilter(logging.Filter):
         def filter(self, record):
             if record.exc_info:
@@ -38,88 +37,100 @@ from src.application.use_cases.search_documents import SearchDocumentsUseCase
 
 load_dotenv()
 
+# MIME types for the Chainlit file picker accept list
+SUPPORTED_MIMES = [
+    "application/pdf",
+    "text/plain",
+    "text/csv",
+    "text/html",
+    "application/json",
+    "text/markdown",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]
+
+
+def _is_supported_file(element) -> bool:
+    """Check if a file element has a supported extension."""
+    if not element.name:
+        return False
+    ext = Path(element.name).suffix.lstrip(".").lower()
+    return ext in ProviderFactory.get_document_loader().supported_extensions()
+
+
+def _create_search_use_case() -> SearchDocumentsUseCase:
+    """Create a SearchDocumentsUseCase from factory singletons."""
+    return SearchDocumentsUseCase(ProviderFactory.get_repository(), ProviderFactory.get_llm())
+
 
 @cl.on_chat_resume
 async def on_chat_resume(thread: dict):
-    """
-    Resume a previous chat thread.
-    Restores the search context from the persisted thread metadata.
-    """
-    # Get pdf_data from thread metadata
+    """Resume a previous chat thread."""
+    # Kept as "pdf_data" for backward compat with persisted sessions
     metadata = thread.get("metadata", {})
     pdf_data = metadata.get("pdf_data", {})
-    
+
     cl.user_session.set("pdf_data", pdf_data)
-    
+
     if pdf_data:
-        # Restore search capability using existing documents in vector store
         try:
-            repository = ProviderFactory.get_repository()
-            llm = ProviderFactory.get_llm()
-            search_use_case = SearchDocumentsUseCase(repository, llm)
-            cl.user_session.set("search_use_case", search_use_case)
+            cl.user_session.set("search_use_case", _create_search_use_case())
             total_chunks = sum(pdf_data.values())
             await cl.Message(
                 content=f"♻️ **Welcome back!** Your session has been restored! 🎉\n\n"
-                        f"📚 You have **{len(pdf_data)} PDF(s)** ready to chat with ({total_chunks} chunks loaded)\n"
+                        f"📚 You have **{len(pdf_data)} document(s)** ready to chat with ({total_chunks} chunks loaded)\n"
                         f"💬 Feel free to continue asking questions!",
                 actions=[
-                    cl.Action(name="show_pdfs", payload={}, label="📚 View My PDFs")
+                    cl.Action(name="show_pdfs", payload={}, label="📚 View My Documents")
                 ]
             ).send()
         except Exception as e:
             await cl.Message(content=f"⚠️ Error restoring context: {str(e)}").send()
     else:
         await cl.Message(
-            content="👋 **Welcome back!** Your session was restored, but no PDFs are loaded yet.\n\n"
-                    "📄 Upload a PDF to start chatting with your documents!",
+            content="👋 **Welcome back!** Your session was restored, but no documents are loaded yet.\n\n"
+                    "📄 Upload a document to start chatting!",
         ).send()
 
 
 async def update_thread_metadata():
     """Update thread metadata with current pdf_data.
 
-    This is a best-effort operation - if it fails, the session still works,
+    Best-effort — if it fails, the session still works,
     but chat resume may not restore the full context.
     """
     try:
         pdf_data = cl.user_session.get("pdf_data") or {}
 
-        # Get thread_id from session context
         if not hasattr(cl.context, 'session') or not hasattr(cl.context.session, "thread_id"):
-            return  # No session context available, skip silently
+            return
 
         thread_id = cl.context.session.thread_id
         if not thread_id:
-            return  # No thread_id, skip silently
+            return
 
-        # Try to update thread metadata using Chainlit's data layer
-        # This may fail if data layer is not fully configured
+        # May fail if data layer is not fully configured or Chainlit version differs
         try:
             thread = cl.Thread(id=thread_id, metadata={"pdf_data": pdf_data})
-            if hasattr(thread, 'update'):
-                await thread.update()
+            await thread.update()
         except (AttributeError, TypeError):
-            # cl.Thread or update() not available in this Chainlit version
             pass
 
     except Exception:
-        # Silently ignore - thread metadata is optional for core functionality
         pass
 
 
 
 async def show_pdf_list():
-    """Display list of PDFs with delete buttons."""
+    """Display list of documents with delete buttons."""
     pdf_data = cl.user_session.get("pdf_data") or {}
-    
+
     if not pdf_data:
-        await cl.Message(content="📦 **No PDFs loaded yet!** Upload a document to get started. 🚀").send()
+        await cl.Message(content="📦 **No documents loaded yet!** Upload a file to get started. 🚀").send()
         return
-    
+
     content = "📚 **Your Document Library:**\n\n"
     actions = []
-    
+
     for pdf_name, chunks in pdf_data.items():
         content += f"• **{pdf_name}** ({chunks} chunks)\n"
         actions.append(
@@ -129,79 +140,112 @@ async def show_pdf_list():
                 label=f"❌ Delete {pdf_name}",
             )
         )
-    
+
     total_chunks = sum(pdf_data.values())
     content += f"\n📊 **Total:** {len(pdf_data)} document{'s' if len(pdf_data) != 1 else ''} • {total_chunks} chunks"
-    
+
     actions.append(
         cl.Action(name="refresh_list", payload={}, label="🔄 Refresh List")
     )
-    
+
     await cl.Message(content=content, actions=actions).send()
 
 
 @cl.action_callback("delete_pdf")
 async def handle_delete_pdf(action: cl.Action):
-    """Handle PDF deletion."""
+    """Handle document deletion."""
     pdf_name = action.payload.get("pdf_name")
-    
+
     msg = cl.Message(content=f"🗑️ Removing **{pdf_name}** from your library...")
     await msg.send()
-    
+
     try:
         repository = ProviderFactory.get_repository()
         deleted = await cl.make_async(repository.delete_by_source)(pdf_name)
-        
+
         pdf_data = cl.user_session.get("pdf_data") or {}
         if pdf_name in pdf_data:
             del pdf_data[pdf_name]
         cl.user_session.set("pdf_data", pdf_data)
-        
-        # Persist to thread metadata
+
         await update_thread_metadata()
-        
-        # Recreate search use case if documents remain
+
         if pdf_data:
-            llm = ProviderFactory.get_llm()
-            search_use_case = SearchDocumentsUseCase(repository, llm)
-            cl.user_session.set("search_use_case", search_use_case)
+            cl.user_session.set("search_use_case", _create_search_use_case())
         else:
             cl.user_session.set("search_use_case", None)
-        
+
         await cl.Message(
             content=f"✅ **Done!** {pdf_name} has been removed ({deleted} chunks deleted)"
         ).send()
-        
+
         await show_pdf_list()
-        
+
     except Exception as e:
         await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
 
 
 @cl.action_callback("refresh_list")
 async def handle_refresh_list(action: cl.Action):
-    """Refresh PDF list."""
+    """Refresh document list."""
     await show_pdf_list()
 
 
 @cl.action_callback("show_pdfs")
 async def handle_show_pdfs(action: cl.Action):
-    """Show PDF list from button."""
+    """Show document list from button."""
     await show_pdf_list()
 
 
-async def process_pdf(pdf_file, clear_first: bool = False) -> tuple[int, str]:
-    """Process uploaded PDF file."""
+async def process_file(file_el, clear_first: bool = False) -> tuple[int, str]:
+    """Process an uploaded document file."""
     repository = ProviderFactory.get_repository()
-    ingest_use_case = IngestDocumentUseCase(repository)
-    
+    document_loader = ProviderFactory.get_document_loader()
+    ingest_use_case = IngestDocumentUseCase(repository, document_loader)
+
     document = await cl.make_async(ingest_use_case.execute)(
-        pdf_file.path, 
-        source_name=pdf_file.name,
+        file_el.path,
+        source_name=file_el.name,
         clear_existing=clear_first
     )
-    
-    return document.chunk_count, pdf_file.name
+
+    return document.chunk_count, file_el.name
+
+
+async def _ingest_files(files) -> None:
+    """Shared logic for ingesting a list of uploaded files."""
+    pdf_data = cl.user_session.get("pdf_data") or {}
+    clear_first = len(pdf_data) == 0
+
+    for file_el in files:
+        msg = cl.Message(content=f"🚀 Processing **{file_el.name}**... This will just take a moment!")
+        await msg.send()
+
+        try:
+            chunk_count, file_name = await process_file(file_el, clear_first)
+            clear_first = False
+
+            pdf_data[file_name] = chunk_count
+            cl.user_session.set("pdf_data", pdf_data)
+
+            await cl.Message(
+                content=f"✅ **{file_name}** is ready! ({chunk_count} chunks) 🎉",
+                actions=[
+                    cl.Action(name="show_pdfs", payload={}, label="📚 View All Documents"),
+                ]
+            ).send()
+
+        except Exception as e:
+            print(f"Error processing file: {e}")
+            await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
+
+    pdf_data = cl.user_session.get("pdf_data") or {}
+    if pdf_data:
+        try:
+            cl.user_session.set("search_use_case", _create_search_use_case())
+        except Exception as e:
+            print(f"Error creating search use case: {e}")
+    await update_thread_metadata()
 
 
 @cl.set_starters
@@ -209,7 +253,7 @@ async def set_starters():
     """Define Chat Starters for the welcome screen."""
     return [
         cl.Starter(
-            label="📄 Upload PDF",
+            label="📄 Upload Document",
             message="/upload",
             icon="/public/icons/upload.svg",
         ),
@@ -235,118 +279,54 @@ async def start():
 @cl.on_message
 async def main(message: cl.Message):
     """Handle user messages and file uploads."""
-    
-    # Check for attached PDFs
+
+    # Check for attached documents
     if message.elements:
-        pdf_files = [el for el in message.elements if el.mime == "application/pdf"]
-        
-        if pdf_files:
-            pdf_data = cl.user_session.get("pdf_data") or {}
-            clear_first = len(pdf_data) == 0
-            
-            for pdf_el in pdf_files:
-                msg = cl.Message(content=f"🚀 Processing **{pdf_el.name}**... This will just take a moment!")
-                await msg.send()
-                
-                try:
-                    chunk_count, pdf_name = await process_pdf(pdf_el, clear_first)
-                    clear_first = False
-                    
-                    pdf_data[pdf_name] = chunk_count
-                    cl.user_session.set("pdf_data", pdf_data)
-                    
-                    await cl.Message(
-                        content=f"✅ **Success!** {pdf_name} is ready ({chunk_count} chunks) 🎉",
-                        actions=[
-                            cl.Action(name="show_pdfs", payload={}, label="📚 View All Documents"),
-                        ]
-                    ).send()
-                    
-                except Exception as e:
-                    print(f"Error processing PDF: {e}")
-                    await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
+        supported_files = [el for el in message.elements if _is_supported_file(el)]
 
-            # Create search use case after all PDFs are processed
-            repository = ProviderFactory.get_repository()
-            llm = ProviderFactory.get_llm()
-            search_use_case = SearchDocumentsUseCase(repository, llm)
-            cl.user_session.set("search_use_case", search_use_case)
-
-            # Persist all added PDFs to thread metadata
-            await update_thread_metadata()
-
+        if supported_files:
+            await _ingest_files(supported_files)
             return
 
     # Check for commands
     cmd = message.content.strip().lower()
-    
+
     if cmd in ["/files", "/arquivos", "/pdfs", "/listar"]:
         await show_pdf_list()
         return
-    
-    # Starter: Upload PDF
+
     if cmd == "/upload":
         files = await cl.AskFileMessage(
-            content="📂 **Select your PDF files:**\n\nYou can choose multiple documents at once!",
-            accept=["application/pdf"],
+            content="📂 **Select your files:**\n\nSupported formats: PDF, TXT, CSV, HTML, JSON, Markdown, DOCX.\nYou can choose multiple documents at once!",
+            accept=SUPPORTED_MIMES,
             max_size_mb=50,
             max_files=10,
             timeout=300,
         ).send()
-        
+
         if not files:
             await cl.Message(content="❌ No files selected. Try again when you're ready! 😊").send()
             return
-        
-        pdf_data = cl.user_session.get("pdf_data") or {}
-        clear_first = len(pdf_data) == 0
-        
-        for pdf_file in files:
-            msg = cl.Message(content=f"🚀 Processing **{pdf_file.name}**... Hang tight!")
-            await msg.send()
-            
-            try:
-                chunk_count, pdf_name = await process_pdf(pdf_file, clear_first)
-                clear_first = False
-                
-                pdf_data[pdf_name] = chunk_count
-                cl.user_session.set("pdf_data", pdf_data)
-                
-                await cl.Message(
-                    content=f"✅ **{pdf_name}** is ready to chat! ({chunk_count} chunks) 🎉",
-                    actions=[
-                        cl.Action(name="show_pdfs", payload={}, label="📚 View All Documents"),
-                    ]
-                ).send()
-                
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                await cl.Message(content=f"❌ **Oops!** Something went wrong: {str(e)}").send()
-        
-        # Create search use case after all PDFs are processed
-        repository = ProviderFactory.get_repository()
-        llm = ProviderFactory.get_llm()
-        search_use_case = SearchDocumentsUseCase(repository, llm)
-        cl.user_session.set("search_use_case", search_use_case)
 
-        # Persist to thread metadata
-        await update_thread_metadata()
+        await _ingest_files(files)
+
+        pdf_data = cl.user_session.get("pdf_data") or {}
         total_chunks = sum(pdf_data.values())
         await cl.Message(
             content=f"🎉 **All set!** You have **{len(pdf_data)} document{'s' if len(pdf_data) != 1 else ''}** ready ({total_chunks} chunks)\n\n"
                     "💬 Start asking questions about your documents!",
         ).send()
         return
-    
-    # Starter: Help
+
     if cmd == "/help":
         await cl.Message(
             content="## 🚀 Welcome to Your Smart Document Assistant!\n\n"
                     "This is a **RAG (Retrieval-Augmented Generation)** system - think of it as your personal "
-                    "research assistant that reads your PDFs and answers your questions!\n\n"
+                    "research assistant that reads your documents and answers your questions!\n\n"
+                    "## 📁 Supported Formats:\n\n"
+                    "PDF, TXT, CSV, HTML, JSON, Markdown (.md), DOCX\n\n"
                     "## 🎯 How it works:\n\n"
-                    "1. **📄 Upload your PDFs** - Use the upload button or simply drag files into the chat\n"
+                    "1. **📄 Upload your documents** - Use the upload button or simply drag files into the chat\n"
                     "2. **❓ Ask anything** - Type your questions in natural language\n"
                     "3. **🤖 Get smart answers** - The AI finds relevant info and crafts a precise response\n\n"
                     "## 🛠️ Available Commands:\n\n"
@@ -360,8 +340,7 @@ async def main(message: cl.Message):
             ]
         ).send()
         return
-    
-    # Starter: Examples
+
     if cmd == "/examples":
         await cl.Message(
             content="## 💡 Question Ideas to Get Started\n\n"
@@ -379,23 +358,23 @@ async def main(message: cl.Message):
                     "🎓 **Remember:** The more specific your question, the better the answer! Feel free to ask follow-up questions too.",
         ).send()
         return
-    
+
     # Regular search
     search_use_case = cl.user_session.get("search_use_case")
-    
+
     if not search_use_case:
         await cl.Message(
             content="📄 **No documents loaded yet!**\n\n"
-                    "Upload a PDF first to start asking questions. Click the 📄 button above or use `/upload`!",
+                    "Upload a document first to start asking questions. Click the 📄 button above or use `/upload`!",
             actions=[
                 cl.Action(name="show_pdfs", payload={}, label="📚 View Documents")
             ]
         ).send()
         return
-    
+
     msg = cl.Message(content="")
     await msg.send()
-    
+
     try:
         result = await cl.make_async(search_use_case.execute)(message.content)
         msg.content = result.answer

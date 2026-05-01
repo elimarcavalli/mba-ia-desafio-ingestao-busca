@@ -15,8 +15,11 @@ langchain-google-genai
 psycopg[binary]
 sqlalchemy
 
-# PDF Processing
+# Document Processing
 pypdf
+beautifulsoup4
+lxml
+docx2txt
 
 # Web Interface
 chainlit

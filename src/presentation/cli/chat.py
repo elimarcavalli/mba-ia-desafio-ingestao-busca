@@ -4,6 +4,7 @@ Interactive command-line chat for document Q&A.
 """
 import os
 import sys
+from pathlib import Path
 
 # Add project root to path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -16,35 +17,39 @@ from src.application.use_cases.ingest_document import IngestDocumentUseCase
 from src.application.use_cases.search_documents import SearchDocumentsUseCase
 
 
-def list_pdfs(directory: str = ".") -> list[str]:
-    """List all PDF files in a directory."""
-    pdfs = []
+def list_documents(directory: str = ".") -> list[str]:
+    """List all supported document files in a directory."""
+    supported = ProviderFactory.get_document_loader().supported_extensions()
+    docs = []
     for file in os.listdir(directory):
-        if file.lower().endswith(".pdf"):
-            pdfs.append(file)
-    return sorted(pdfs)
+        ext = Path(file).suffix.lstrip(".").lower()
+        if ext in supported:
+            docs.append(file)
+    return sorted(docs)
 
 
-def select_pdf() -> str | None:
-    """Let user select a PDF file interactively."""
-    pdfs = list_pdfs()
-    
-    if not pdfs:
-        print("❌ No PDF files found in the current directory.")
+def select_document() -> str | None:
+    """Let user select a document file interactively."""
+    docs = list_documents()
+
+    if not docs:
+        supported = ProviderFactory.get_document_loader().supported_extensions()
+        print("❌ No supported files found in the current directory.")
+        print(f"   Supported formats: {', '.join(sorted(supported))}")
         return None
-    
-    print("\n📁 Available PDFs:")
-    for i, pdf in enumerate(pdfs, 1):
-        print(f"  {i}. {pdf}")
-    
+
+    print("\n📁 Available Documents:")
+    for i, doc in enumerate(docs, 1):
+        print(f"  {i}. {doc}")
+
     while True:
         try:
-            choice = input(f"\n✨ Select a number (1-{len(pdfs)}): ").strip()
+            choice = input(f"\n✨ Select a number (1-{len(docs)}): ").strip()
             if not choice:
                 return None
             index = int(choice) - 1
-            if 0 <= index < len(pdfs):
-                return pdfs[index]
+            if 0 <= index < len(docs):
+                return docs[index]
             print("⚠️ Invalid number.")
         except ValueError:
             print("⚠️ Please enter a valid number.")
@@ -60,23 +65,24 @@ def main():
     print("🔍 RAG Semantic Search System - CLI")
     print("=" * 50)
     
-    # Select PDF
-    pdf_file = select_pdf()
-    if not pdf_file:
+    # Select document
+    doc_file = select_document()
+    if not doc_file:
         print("👋 See you later!")
         return
-    
-    print(f"\n📄 Selected PDF: {pdf_file}")
+
+    print(f"\n📄 Selected: {doc_file}")
     print("🔄 Starting ingestion...")
-    
+
     try:
         # Get dependencies
         repository = ProviderFactory.get_repository()
         llm = ProviderFactory.get_llm()
-        
+        document_loader = ProviderFactory.get_document_loader()
+
         # Ingest document
-        ingest_use_case = IngestDocumentUseCase(repository)
-        document = ingest_use_case.execute(pdf_file, clear_existing=True)
+        ingest_use_case = IngestDocumentUseCase(repository, document_loader)
+        document = ingest_use_case.execute(doc_file, clear_existing=True)
         
         print(f"✅ Ingestion complete! {document.chunk_count} chunks created.")
         

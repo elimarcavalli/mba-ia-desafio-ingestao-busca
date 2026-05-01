@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     # RAG Settings
     chunk_size: int = 1000
     chunk_overlap: int = 150
-    retriever_k: int = 10
+    retriever_k: int = 15
     llm_timeout: int = 60
     
     @property

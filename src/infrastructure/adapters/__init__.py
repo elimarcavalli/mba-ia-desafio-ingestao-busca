@@ -4,6 +4,7 @@ from src.infrastructure.adapters.google_embeddings import GoogleEmbeddingsAdapte
 from src.infrastructure.adapters.openai_llm import OpenAILLMAdapter
 from src.infrastructure.adapters.google_llm import GoogleLLMAdapter
 from src.infrastructure.adapters.pgvector_repository import PGVectorRepository
+from src.infrastructure.adapters.document_loader import MultiFormatDocumentLoader
 
 __all__ = [
     "OpenAIEmbeddingsAdapter",
@@ -11,4 +12,5 @@ __all__ = [
     "OpenAILLMAdapter",
     "GoogleLLMAdapter",
     "PGVectorRepository",
+    "MultiFormatDocumentLoader",
 ]

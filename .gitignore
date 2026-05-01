@@ -3,3 +3,5 @@
 __pycache__
 server.log
 .ignore/
+src/presentation/web/.files/*
+src/presentation/web/.chainlit/translations/*

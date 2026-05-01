@@ -4,7 +4,6 @@ Implements RepositoryPort for PostgreSQL with pgVector.
 """
 from typing import List
 
-from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document as LangchainDocument
 from langchain_postgres import PGVector
 from sqlalchemy import text
