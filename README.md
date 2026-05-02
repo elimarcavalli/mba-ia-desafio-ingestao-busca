@@ -2,6 +2,7 @@
 
 > **Your intelligent assistant for documents** — PDF, TXT, CSV, HTML, JSON, Markdown and DOCX. Ask questions and get accurate answers based on your documents!
 
+![Version](https://img.shields.io/badge/System%20version-1.0.0-informational.svg)
 ![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)
 ![LangChain](https://img.shields.io/badge/LangChain-Integration-green.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-336791.svg)
