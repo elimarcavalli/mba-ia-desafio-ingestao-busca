@@ -8,11 +8,11 @@ O sistema processa documentos em duas fases: **Ingestão** e **Busca**.
 
 ## 🏗️ 1. Pipeline de Ingestão
 
-Antes de responder perguntas, o sistema precisa processar o PDF.
+Antes de responder perguntas, o sistema precisa processar o documento.
 
 ```mermaid
 graph LR
-    PDF[📄 PDF] --> Loader[PyPDFLoader]
+    Doc[📄 Documento] --> Loader[MultiFormatDocumentLoader]
     Loader --> Splitter[RecursiveTextSplitter]
     Splitter --> Embedder[Embedding API]
     Embedder --> DB[(PostgreSQL)]
@@ -22,8 +22,9 @@ graph LR
 
 **1.1. Carregamento**
 
-- Biblioteca: `PyPDFLoader` (LangChain)
-- Converte PDF em texto puro
+- Adapter: `MultiFormatDocumentLoader` (despacha para o loader correto via extensão)
+- Formatos suportados: **PDF, TXT, CSV, HTML, JSON, Markdown (.md), DOCX**
+- Loaders internos: `PyPDFLoader`, `TextLoader`, `CSVLoader`, `BSHTMLLoader`, `Docx2txtLoader` (LangChain) + parser JSON próprio
 
 **1.2. Divisão (Chunking)**
 
@@ -51,8 +52,8 @@ Quando você faz uma pergunta:
 ```mermaid
 graph TD
     User[👤 Pergunta] --> QueryEmbed[🔢 Vetor]
-    QueryEmbed --> Search[🔍 Busca Semântica]
-    DB[(PostgreSQL)] -->|Top 10 chunks| Search
+    QueryEmbed --> Search[🔍 Busca MMR]
+    DB[(PostgreSQL)] -->|Top 15 chunks| Search
     Search --> Context[📝 Contexto]
     Context --> LLM[🧠 IA]
     LLM --> Answer[💬 Resposta]
@@ -60,15 +61,15 @@ graph TD
 
 ### Etapas:
 
-**2.1. Busca Semântica**
+**2.1. Busca Semântica com MMR**
 
 - Sua pergunta é convertida em vetor
-- PostgreSQL calcula distância de cosseno
-- Retorna os 10 chunks mais similares
+- O repositório usa **MMR (Maximal Marginal Relevance)**: busca `fetch_k = k × 3` candidatos por similaridade de cosseno e seleciona `k` finais maximizando relevância **e** diversidade — evita chunks redundantes do mesmo trecho do documento.
+- Retorna 15 chunks (configurável via `RETRIEVER_K`)
 
 **2.2. Montagem de Contexto**
 
-- Os 10 chunks são concatenados em XML
+- Cada chunk vira `<document source="<arquivo>" id=N>...</document>` para que o LLM cite a origem
 
 **2.3. Geração**
 
@@ -79,11 +80,12 @@ graph TD
 
 ## ⚙️ Configurações
 
-| Parâmetro       | Padrão | Descrição                          |
-| --------------- | ------ | ---------------------------------- |
-| `CHUNK_SIZE`    | 1000   | Tamanho de cada chunk (caracteres) |
-| `CHUNK_OVERLAP` | 150    | Sobreposição entre chunks          |
-| `RETRIEVER_K`   | 10     | Quantidade de chunks recuperados   |
+| Parâmetro       | Padrão | Descrição                                          |
+| --------------- | ------ | -------------------------------------------------- |
+| `CHUNK_SIZE`    | 1000   | Tamanho de cada chunk (caracteres)                 |
+| `CHUNK_OVERLAP` | 150    | Sobreposição entre chunks                          |
+| `RETRIEVER_K`   | 15     | Quantidade de chunks recuperados (MMR `fetch_k=45`) |
+| `LLM_TIMEOUT`   | 60     | Timeout em segundos para chamadas LLM              |
 
 Configurações em: `src/config/settings.py` ou `.env`
 
@@ -93,5 +95,6 @@ Configurações em: `src/config/settings.py` ou `.env`
 
 - [RAG - Retrieval-Augmented Generation](https://docs.langchain.com/langsmith/evaluation-approaches#retrieval-augmented-generation-rag)
 - [LangChain Text Splitters](https://python.langchain.com/docs/how_to/#text-splitters)
-- [PyPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/pypdfloader/)
+- [LangChain Document Loaders](https://python.langchain.com/docs/integrations/document_loaders/)
 - [RecursiveCharacterTextSplitter](https://python.langchain.com/api_reference/text_splitters/character/langchain_text_splitters.character.RecursiveCharacterTextSplitter.html)
+- [Maximal Marginal Relevance (MMR)](https://python.langchain.com/api_reference/postgres/vectorstores/langchain_postgres.vectorstores.PGVector.html#langchain_postgres.vectorstores.PGVector.max_marginal_relevance_search)

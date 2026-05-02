@@ -1,6 +1,6 @@
 # 🤖 DocMind - RAG Semantic Search System
 
-> **Your intelligent assistant for PDF documents** - Ask questions and get accurate answers based on your documents!
+> **Your intelligent assistant for documents** — PDF, TXT, CSV, HTML, JSON, Markdown and DOCX. Ask questions and get accurate answers based on your documents!
 
 ![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)
 ![LangChain](https://img.shields.io/badge/LangChain-Integration-green.svg)
@@ -11,7 +11,7 @@
 
 ## 💡 What is DocMind?
 
-**DocMind transforms any PDF into an intelligent assistant that answers your questions instantly.** No more manual searching through lengthy documents!
+**DocMind transforms any document into an intelligent assistant that answers your questions instantly.** No more manual searching through lengthy documents!
 
 Imagine having an expert who has read your entire document and can answer any question about it in seconds - that's DocMind.
 
@@ -26,7 +26,7 @@ Imagine having an expert who has read your entire document and can answer any qu
 
 ### 🔄 How it works:
 
-1. 📄 You upload a PDF
+1. 📄 You upload a document (PDF, TXT, CSV, HTML, JSON, MD or DOCX)
 2. 🧠 The system processes and "understands" the content using vector embeddings
 3. 💬 You ask questions in natural language
 4. 🔍 The system searches for the most semantically relevant passages
@@ -115,7 +115,7 @@ The system will:
 
 After starting, access `http://localhost:8000` and you'll see a modern and intuitive interface where you can:
 
-- 📎 **Drag and drop** PDFs for upload
+- 📎 **Drag and drop** documents for upload
 - 💬 **Ask questions** in natural language
 - 📚 **Manage** multiple documents
 - 🔍 **View history** of conversations

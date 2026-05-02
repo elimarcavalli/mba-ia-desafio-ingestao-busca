@@ -51,11 +51,11 @@ graph TD
 Pure business rules.
 This layer **does not know** that a database or AI exists.
 
-| Folder          | Contents                                      |
-| --------------- | --------------------------------------------- |
-| `entities/`     | `Document`, `DocumentChunk`, `SearchResult`   |
-| `ports/`        | `RepositoryPort`, `LLMPort`, `EmbeddingsPort` |
-| `exceptions.py` | Domain exceptions                             |
+| Folder          | Contents                                                            |
+| --------------- | ------------------------------------------------------------------- |
+| `entities/`     | `Document`, `DocumentChunk`, `SearchResult`                         |
+| `ports/`        | `RepositoryPort`, `LLMPort`, `EmbeddingsPort`, `DocumentLoaderPort` |
+| `exceptions.py` | Domain exceptions                                                   |
 
 > **Rule:** No imports from LangChain, SQLAlchemy, or external libraries.
 
@@ -67,10 +67,10 @@ This layer **does not know** that a database or AI exists.
 
 Coordinates the flow between Ports.
 
-| File                  | Responsibility                      |
-| --------------------- | ----------------------------------- |
-| `ingest_document.py`  | PDF → Chunks → Vectors → Database   |
-| `search_documents.py` | Question → Context → LLM → Response |
+| File                  | Responsibility                        |
+| --------------------- | ------------------------------------- |
+| `ingest_document.py`  | Document → Chunks → Vectors → Database |
+| `search_documents.py` | Question → Context → LLM → Response   |
 
 ---
 
@@ -80,10 +80,10 @@ Coordinates the flow between Ports.
 
 Implements the Ports with real technologies.
 
-| Folder       | Contents                                                     |
-| ------------ | ------------------------------------------------------------ |
-| `adapters/`  | `PGVectorRepository`, `OpenAILLMAdapter`, `GoogleLLMAdapter` |
-| `factories/` | `ProviderFactory` (dependency injection)                     |
+| Folder       | Contents                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| `adapters/`  | `PGVectorRepository`, `OpenAILLMAdapter`, `GoogleLLMAdapter`, `MultiFormatDocumentLoader` |
+| `factories/` | `ProviderFactory` (dependency injection)                                                 |
 
 > If you switch PostgreSQL for another database, you only need to change **this** layer.
 

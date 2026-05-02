@@ -51,11 +51,11 @@ graph TD
 Regras de negócio puras.
 Esta camada **não sabe** que existe banco de dados ou IA.
 
-| Pasta           | Conteúdo                                      |
-| --------------- | --------------------------------------------- |
-| `entities/`     | `Document`, `DocumentChunk`, `SearchResult`   |
-| `ports/`        | `RepositoryPort`, `LLMPort`, `EmbeddingsPort` |
-| `exceptions.py` | Exceções de domínio                           |
+| Pasta           | Conteúdo                                                            |
+| --------------- | ------------------------------------------------------------------- |
+| `entities/`     | `Document`, `DocumentChunk`, `SearchResult`                         |
+| `ports/`        | `RepositoryPort`, `LLMPort`, `EmbeddingsPort`, `DocumentLoaderPort` |
+| `exceptions.py` | Exceções de domínio                                                 |
 
 > **Regra:** Nenhum import de LangChain, SQLAlchemy ou bibliotecas externas.
 
@@ -67,10 +67,10 @@ Esta camada **não sabe** que existe banco de dados ou IA.
 
 Coordena o fluxo entre as Ports.
 
-| Arquivo               | Responsabilidade                     |
-| --------------------- | ------------------------------------ |
-| `ingest_document.py`  | PDF → Chunks → Vetores → Banco       |
-| `search_documents.py` | Pergunta → Contexto → LLM → Resposta |
+| Arquivo               | Responsabilidade                       |
+| --------------------- | -------------------------------------- |
+| `ingest_document.py`  | Documento → Chunks → Vetores → Banco   |
+| `search_documents.py` | Pergunta → Contexto → LLM → Resposta   |
 
 ---
 
@@ -80,10 +80,10 @@ Coordena o fluxo entre as Ports.
 
 Implementa as Ports com tecnologias reais.
 
-| Pasta        | Conteúdo                                                     |
-| ------------ | ------------------------------------------------------------ |
-| `adapters/`  | `PGVectorRepository`, `OpenAILLMAdapter`, `GoogleLLMAdapter` |
-| `factories/` | `ProviderFactory` (injeção de dependência)                   |
+| Pasta        | Conteúdo                                                                                |
+| ------------ | --------------------------------------------------------------------------------------- |
+| `adapters/`  | `PGVectorRepository`, `OpenAILLMAdapter`, `GoogleLLMAdapter`, `MultiFormatDocumentLoader` |
+| `factories/` | `ProviderFactory` (injeção de dependência)                                              |
 
 > Se trocar PostgreSQL por outro banco, altera-se **apenas** esta camada.
 

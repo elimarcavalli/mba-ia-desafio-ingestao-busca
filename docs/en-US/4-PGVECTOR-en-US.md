@@ -41,11 +41,11 @@ Texts with similar meaning have nearby vectors.
 SELECT content, 1 - (embedding <=> $1) AS similarity
 FROM langchain_pg_embedding
 ORDER BY embedding <=> $1
-LIMIT 10;
+LIMIT 45;
 ```
 
 - `<=>` = Cosine distance operator
-- Returns the 10 most similar chunks
+- DocMind fetches **45 candidates** (`fetch_k = retriever_k × 3 = 15 × 3`) and then applies **MMR** to reduce them to the final 15 with diversity.
 
 ---
 
@@ -70,6 +70,8 @@ CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops);
 | ---------------------------------------------------- | ------------------------------- |
 | `src/infrastructure/adapters/pgvector_repository.py` | Communication with pgvector     |
 | `docker-compose.yml`                                 | PostgreSQL + pgvector container |
+
+> ⚠️ **Known workaround:** `langchain-postgres` keeps a `scoped_session` that accumulates stale ORM objects across sequential inserts and triggers `NotNullViolation`. The `PGVectorRepository._reset_session()` method calls `session_maker.remove()` before each insert to work around this — see `pgvector_repository.py:29-37`.
 
 ---
 
