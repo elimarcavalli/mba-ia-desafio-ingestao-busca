@@ -135,3 +135,101 @@ class TestUnsupportedFormat:
         f.write_text("all: build")
         with pytest.raises(UnsupportedFormatError, match="none"):
             loader.load(str(f))
+
+
+class TestLoadHtml:
+    """Tests for loading HTML files."""
+
+    def test_load_html(self, loader, tmp_path):
+        f = tmp_path / "page.html"
+        f.write_text(
+            "<html><body><h1>Title</h1><p>Body content here.</p></body></html>",
+            encoding="utf-8",
+        )
+        docs = loader.load(str(f))
+        assert len(docs) >= 1
+        combined = " ".join(d.page_content for d in docs)
+        assert "Body content here." in combined
+
+    def test_htm_extension_also_supported(self, loader, tmp_path):
+        f = tmp_path / "page.htm"
+        f.write_text("<html><body>X content Y</body></html>", encoding="utf-8")
+        docs = loader.load(str(f))
+        combined = " ".join(d.page_content for d in docs)
+        assert "X content Y" in combined
+
+
+FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
+
+
+class TestLoadDocx:
+    """Tests for loading DOCX files using a static fixture."""
+
+    def test_load_docx(self, loader):
+        f = FIXTURES_DIR / "sample.docx"
+        docs = loader.load(str(f))
+        assert len(docs) >= 1
+        combined = " ".join(d.page_content for d in docs)
+        assert "Hello DOCX content." in combined
+
+
+class TestFileNameHint:
+    """Regression tests for the .md upload bug — extension comes from file_name."""
+
+    def test_file_name_overrides_path_extension(self, loader, tmp_path):
+        """Chainlit uploads land in /tmp/<uuid> with no extension; file_name carries
+        the real format."""
+        f = tmp_path / "no_extension_blob"
+        f.write_text("# Title\n\nMarkdown body here.", encoding="utf-8")
+
+        docs = loader.load(str(f), file_name="readme.md")
+
+        assert len(docs) >= 1
+        assert "Markdown body here." in docs[0].page_content
+
+    def test_file_name_none_falls_back_to_path(self, loader, tmp_txt_file):
+        """When file_name is None, extension is read from file_path (CLI path)."""
+        docs = loader.load(str(tmp_txt_file), file_name=None)
+        assert len(docs) >= 1
+
+    def test_file_name_unsupported_raises_with_correct_extension_in_message(
+        self, loader, tmp_path
+    ):
+        """Error message must reflect the file_name's extension, not the temp path."""
+        f = tmp_path / "blob"
+        f.write_text("data", encoding="utf-8")
+        with pytest.raises(UnsupportedFormatError, match=r"\.xyz"):
+            loader.load(str(f), file_name="upload.xyz")
+
+    def test_file_name_with_uppercase_extension(self, loader, tmp_path):
+        """Extension detection must be case-insensitive."""
+        f = tmp_path / "blob"
+        f.write_text("# Title\n", encoding="utf-8")
+        docs = loader.load(str(f), file_name="README.MD")
+        assert len(docs) >= 1
+
+
+class TestJsonExtraEdgeCases:
+    """Additional JSON edge cases."""
+
+    def test_empty_object_returns_one_doc_with_empty_braces(self, loader, tmp_path):
+        f = tmp_path / "empty_obj.json"
+        f.write_text("{}", encoding="utf-8")
+        docs = loader.load(str(f))
+        # `{}` serialized has content, so we get exactly one doc.
+        assert len(docs) == 1
+        assert "{}" in docs[0].page_content
+
+    def test_json_metadata_includes_source(self, loader, tmp_json_file):
+        docs = loader.load(str(tmp_json_file))
+        assert docs[0].metadata.get("source") == str(tmp_json_file)
+
+    def test_json_unicode_preserved(self, loader, tmp_path):
+        f = tmp_path / "u.json"
+        f.write_text(
+            json.dumps({"k": "olá mundo — açaí"}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        docs = loader.load(str(f))
+        assert "olá mundo" in docs[0].page_content
+        assert "açaí" in docs[0].page_content
