@@ -16,6 +16,6 @@ server.log
 /.chainlit/
 /.files/
 src/presentation/web/.files/*
-src/presentation/web/.chainlit/translations/*
+# src/presentation/web/.chainlit/translations/*
 !src/presentation/web/.chainlit/translations/en-US.json
 !src/presentation/web/.chainlit/translations/pt-BR.json
