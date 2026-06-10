@@ -18,12 +18,12 @@
     },
     "auth": {
         "login": {
-            "title": "Login to access the app",
+            "title": "Sign in or create an account",
             "form": {
                 "email": {
-                    "label": "Email address",
-                    "required": "email is a required field",
-                    "placeholder": "me@example.com"
+                    "label": "Username",
+                    "required": "username is a required field",
+                    "placeholder": "Type a new name to create an account"
                 },
                 "password": {
                     "label": "Password",
@@ -48,7 +48,7 @@
                 "oauthAccountNotLinked": "To confirm your identity, sign in with the same account you used originally",
                 "emailSignin": "The e-mail could not be sent",
                 "emailVerify": "Please verify your email, a new email has been sent",
-                "credentialsSignin": "Sign in failed. Check the details you provided are correct",
+                "credentialsSignin": "Sign in failed. If the username already exists, the password is wrong. If you are creating a new account, the username must be 2–64 characters long and may only contain letters, digits, and the symbols . _ - + @ ; the password must be at least 6 characters.",
                 "sessionRequired": "Please sign in to access this page"
             }
         },

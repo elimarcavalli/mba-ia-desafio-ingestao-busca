@@ -25,6 +25,9 @@ chardet
 # Web Interface
 chainlit
 
+# Authentication
+argon2-cffi
+
 # Testing
 pytest
 pytest-asyncio

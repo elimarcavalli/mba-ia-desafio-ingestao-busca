@@ -25,13 +25,18 @@ SCHEMA = """
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- User Table
+-- The "passwordHash" column is owned by our auth use case, not by Chainlit.
 CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT PRIMARY KEY,
     "identifier" TEXT NOT NULL UNIQUE,
     "metadata" JSONB NOT NULL DEFAULT '{}',
+    "passwordHash" TEXT,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration: add passwordHash to existing User tables
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT;
 
 -- Thread Table (relaxed constraints for Chainlit compatibility)
 CREATE TABLE IF NOT EXISTS "Thread" (

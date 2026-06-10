@@ -28,14 +28,47 @@ if sys.platform == 'win32':
 
     logging.getLogger('asyncio').addFilter(ConnectionResetFilter())
 
+from typing import Optional
+
 import chainlit as cl
 from dotenv import load_dotenv
 
-from src.infrastructure.factories.provider_factory import ProviderFactory
+from src.application.use_cases.authenticate_or_register_user import (
+    AuthenticateOrRegisterUserUseCase,
+)
 from src.application.use_cases.ingest_document import IngestDocumentUseCase
 from src.application.use_cases.search_documents import SearchDocumentsUseCase
+from src.domain.exceptions import DomainException
+from src.infrastructure.factories.provider_factory import ProviderFactory
 
 load_dotenv()
+
+
+@cl.password_auth_callback
+async def _auth(identifier: str, password: str) -> Optional[cl.User]:
+    """Sign-in or sign-up: unknown identifiers create an account on first login.
+
+    # Returning a cl.User grants access; returning None causes Chainlit to show a login error.
+    # Any error here is logged and results in a generic login failure message for the user.
+    """
+    use_case = AuthenticateOrRegisterUserUseCase(
+        ProviderFactory.get_user_repository(),
+        ProviderFactory.get_password_hasher(),
+    )
+    safe_id = (identifier or "").strip()[:64]
+    try:
+        user = await cl.make_async(use_case.execute)(identifier, password)
+    except DomainException as exc:
+        print(f"[auth] denied for '{safe_id}': {type(exc).__name__}: {exc}", file=sys.stderr)
+        return None
+    except Exception as exc:
+        # Fail closed on unexpected infrastructure errors.
+        print(f"[auth] unexpected error for '{safe_id}': {type(exc).__name__}: {exc}", file=sys.stderr)
+        return None
+
+    print(f"[auth] success: {user.identifier}", file=sys.stderr)
+    return cl.User(identifier=user.identifier, display_name=user.identifier)
+
 
 # MIME types for the Chainlit file picker accept list
 SUPPORTED_MIMES = [
@@ -248,6 +281,32 @@ async def _ingest_files(files) -> None:
     await update_thread_metadata()
 
 
+async def _answer_question(question: str) -> None:
+    """Run a document search for a user question and send the answer."""
+    search_use_case = cl.user_session.get("search_use_case")
+
+    if not search_use_case:
+        await cl.Message(
+            content="📄 **No documents loaded yet!**\n\n"
+                    "Upload a document first to start asking questions. Click the 📄 button above or use `/upload`!",
+            actions=[
+                cl.Action(name="show_pdfs", payload={}, label="📚 View Documents")
+            ]
+        ).send()
+        return
+
+    msg = cl.Message(content="")
+    await msg.send()
+
+    try:
+        result = await cl.make_async(search_use_case.execute)(question)
+        msg.content = result.answer
+        await msg.update()
+    except Exception as e:
+        msg.content = f"❌ **Oops!** Something went wrong: {str(e)}"
+        await msg.update()
+
+
 @cl.set_starters
 async def set_starters():
     """Define Chat Starters for the welcome screen."""
@@ -286,6 +345,9 @@ async def main(message: cl.Message):
 
         if supported_files:
             await _ingest_files(supported_files)
+            question = message.content.strip()
+            if question:
+                await _answer_question(question)
             return
 
     # Check for commands
@@ -360,25 +422,4 @@ async def main(message: cl.Message):
         return
 
     # Regular search
-    search_use_case = cl.user_session.get("search_use_case")
-
-    if not search_use_case:
-        await cl.Message(
-            content="📄 **No documents loaded yet!**\n\n"
-                    "Upload a document first to start asking questions. Click the 📄 button above or use `/upload`!",
-            actions=[
-                cl.Action(name="show_pdfs", payload={}, label="📚 View Documents")
-            ]
-        ).send()
-        return
-
-    msg = cl.Message(content="")
-    await msg.send()
-
-    try:
-        result = await cl.make_async(search_use_case.execute)(message.content)
-        msg.content = result.answer
-        await msg.update()
-    except Exception as e:
-        msg.content = f"❌ **Oops!** Something went wrong: {str(e)}"
-        await msg.update()
+    await _answer_question(message.content)

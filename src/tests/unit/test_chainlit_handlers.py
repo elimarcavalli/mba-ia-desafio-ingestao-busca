@@ -31,6 +31,8 @@ def _ensure_chainlit_stub():
     cl_stub.on_message = passthrough_decorator
     cl_stub.action_callback = passthrough_decorator
     cl_stub.set_starters = passthrough_decorator
+    cl_stub.password_auth_callback = passthrough_decorator
+    cl_stub.User = MagicMock(name="chainlit_User")
     cl_stub.Action = MagicMock()
     cl_stub.Message = MagicMock()
     cl_stub.AskFileMessage = MagicMock()
@@ -376,6 +378,29 @@ class TestOnMessageRouter:
             await chainlit_app.main(message)
 
         ingest_calls.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_attached_files_with_question_ingests_then_answers(self):
+        fake_search = MagicMock()
+        fake_result = MagicMock()
+        fake_result.answer = "The document says..."
+        fake_search.execute.return_value = fake_result
+        _setup_user_session({"pdf_data": {}})
+        sent = _patch_message()
+
+        message = MagicMock()
+        message.elements = [SimpleNamespace(name="report.pdf")]
+        message.content = "What does the report say?"
+
+        async def fake_ingest(_files):
+            chainlit_app.cl.user_session.set("pdf_data", {"report.pdf": 7})
+            chainlit_app.cl.user_session.set("search_use_case", fake_search)
+
+        with patch.object(chainlit_app, "_ingest_files", new=fake_ingest):
+            await chainlit_app.main(message)
+
+        fake_search.execute.assert_called_once_with("What does the report say?")
+        assert any(m.content == "The document says..." for m in sent)
 
     @pytest.mark.asyncio
     async def test_attached_unsupported_files_ignored(self):

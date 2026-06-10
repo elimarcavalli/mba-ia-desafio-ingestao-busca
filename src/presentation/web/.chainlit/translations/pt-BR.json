@@ -51,7 +51,7 @@
                 "oauthAccountNotLinked": "Para confirmar sua identidade, faça login com a mesma conta usada originalmente",
                 "emailSignin": "Não foi possível enviar o e-mail",
                 "emailVerify": "Verifique seu e-mail, uma nova mensagem foi enviada",
-                "credentialsSignin": "Falha no login. Verifique os dados informados",
+                "credentialsSignin": "Falha no login. Se o usuário já existe, a senha está incorreta. Se está criando uma nova conta, o usuário deve ter de 2 a 64 caracteres e pode conter apenas letras, dígitos e os símbolos . _ - + @ ; a senha deve ter pelo menos 6 caracteres.",
                 "sessionRequired": "Faça login para acessar esta página"
             }
         },

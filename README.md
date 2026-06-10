@@ -96,9 +96,12 @@ The system will:
 - ✅ Install all necessary dependencies
 - ✅ Configure PostgreSQL database via Docker
 - ✅ Ask for your API key (OpenAI or Google Gemini)
+- ✅ Generate the Chainlit auth secret used to sign session tokens
 - ✅ Start the web interface at `http://localhost:8000`
 
 **Done!** In less than 2 minutes you'll be chatting with your documents! 🎉
+
+> **Login:** the first time you open the web UI, just type a new username and password — your account is created automatically (Argon2id-hashed password, per-user chat history). Returning users sign in with the same form.
 
 ---
 
@@ -167,6 +170,6 @@ This project is under the MIT license.
 
 ---
 
-**Developed by [Elimar Cavalli](https://github.com/elimarcavalli)**
+**Built by [Elimar Cavalli](https://github.com/elimarcavalli)**
 
 _MBA Challenge in Software Engineering with AI - Full Cycle_

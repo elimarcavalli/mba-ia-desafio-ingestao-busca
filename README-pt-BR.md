@@ -89,6 +89,8 @@ Select option (1-6):
 
 **Para primeira execução, escolha a opção `1`**
 
+> **Login:** na primeira vez que abrir a interface web, basta digitar um novo usuário e senha — sua conta é criada automaticamente (senha protegida com Argon2id, histórico de chat por usuário). Usuários existentes entram pelo mesmo formulário.
+
 O sistema irá:
 
 - ✅ Criar ambiente virtual Python automaticamente
@@ -166,6 +168,6 @@ Este projeto está sob a licença MIT.
 
 ---
 
-**Desenvolvido por [Elimar Cavalli](https://github.com/elimarcavalli)**
+**Construído por [Elimar Cavalli](https://github.com/elimarcavalli)**
 
 _Desafio do MBA em Engenharia de Software com IA - Full Cycle_

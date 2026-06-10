@@ -37,3 +37,18 @@ class InvalidDocumentError(DomainException):
 class UnsupportedFormatError(DomainException):
     """Raised when a document format is not supported."""
     pass
+
+
+class InvalidCredentialsError(DomainException):
+    """Raised when user credentials cannot be verified."""
+    pass
+
+
+class InvalidUsernameError(DomainException):
+    """Raised when a username does not match the format policy."""
+    pass
+
+
+class WeakPasswordError(DomainException):
+    """Raised when a password does not meet the strength policy."""
+    pass

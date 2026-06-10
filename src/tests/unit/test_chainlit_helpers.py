@@ -33,6 +33,8 @@ def _ensure_chainlit_stub():
     cl_stub.on_message = passthrough_decorator
     cl_stub.action_callback = passthrough_decorator
     cl_stub.set_starters = passthrough_decorator
+    cl_stub.password_auth_callback = passthrough_decorator
+    cl_stub.User = MagicMock(name="chainlit_User")
 
     cl_stub.Action = MagicMock()
     cl_stub.Message = MagicMock()

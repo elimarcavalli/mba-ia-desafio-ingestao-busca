@@ -110,8 +110,10 @@ language = "en-US"
 
 default_sidebar_state = "open"
 
+confirm_new_chat = false
+
 # Description of the assistant. This is used for HTML tags.
-# description = ""
+description = "DocMind — your private RAG assistant. New here? Just type a new username and password to create an account on first login."
 
 # Chain of Thought (CoT) display mode. Can be "hidden", "tool_call" or "full".
 cot = "full"
@@ -125,7 +127,7 @@ cot = "full"
 
 # Specify a JavaScript file that can be used to customize the user interface.
 # The JavaScript file can be served from the public directory.
-# custom_js = "/public/custom.js"
+custom_js = "/public/login-validation.js"
 
 # The style of alert boxes. Can be "classic" or "modern".
 alert_style = "classic"
@@ -150,7 +152,7 @@ alert_style = "classic"
 logo_file_url = ""
 
 # Load assistant avatar image directly from URL.
-default_avatar_file_url = ""
+default_avatar_file_url = "/public/avatar.svg"
 
 # Specify a custom build directory for the frontend.
 # This can be used to customize the frontend code.

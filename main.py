@@ -3,6 +3,7 @@ import sys
 import subprocess
 import shutil
 import time
+import secrets
 from pathlib import Path
 
 # Configuration - use absolute paths for reliability
@@ -60,6 +61,73 @@ def get_venv_pip():
 
 # --- Configuration Wizard ---
 
+def parse_env_file():
+    """Read simple KEY=VALUE pairs from .env without expanding secrets."""
+    values = {}
+    if not ENV_FILE.exists():
+        return values
+
+    for line in ENV_FILE.read_text(encoding='utf-8').splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        values[key.strip()] = value.strip().strip("'\"")
+    return values
+
+
+def update_env_values(updates):
+    """Update or append KEY=VALUE entries in .env while preserving other values."""
+    existing_lines = []
+    if ENV_FILE.exists():
+        existing_lines = ENV_FILE.read_text(encoding='utf-8').splitlines()
+
+    updated_keys = set()
+    output_lines = []
+
+    for line in existing_lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            output_lines.append(line)
+            continue
+
+        key = stripped.split("=", 1)[0].strip()
+        if key in updates:
+            output_lines.append(f"{key}={format_env_value(updates[key])}")
+            updated_keys.add(key)
+        else:
+            output_lines.append(line)
+
+    missing_updates = {k: v for k, v in updates.items() if k not in updated_keys}
+    if missing_updates:
+        if output_lines and output_lines[-1].strip():
+            output_lines.append("")
+        output_lines.append("# Chainlit")
+        for key, value in missing_updates.items():
+            output_lines.append(f"{key}={format_env_value(value)}")
+
+    ENV_FILE.write_text("\n".join(output_lines) + "\n", encoding='utf-8')
+
+
+def format_env_value(value):
+    """Quote values so secrets with special characters are parsed correctly."""
+    escaped = str(value).replace("\\", "\\\\").replace("'", "\\'")
+    return f"'{escaped}'"
+
+
+def generate_auth_secret():
+    """Generate the secret Chainlit uses to sign authentication tokens."""
+    return secrets.token_urlsafe(32)
+
+
+def ensure_auth_secret():
+    """Ensure .env has CHAINLIT_AUTH_SECRET. User accounts live in the DB."""
+    values = parse_env_file()
+    if not values.get("CHAINLIT_AUTH_SECRET"):
+        update_env_values({"CHAINLIT_AUTH_SECRET": generate_auth_secret()})
+        print_color("Generated CHAINLIT_AUTH_SECRET and saved it to .env.", "GREEN")
+
+
 def configure_env():
     """Interactively creates the .env file."""
     print_color("\n[Configuration Wizard]", "HEADER")
@@ -80,7 +148,7 @@ def configure_env():
 
     llm_provider = "openai" if provider == "1" else "google"
     api_key = ""
-    
+
     if llm_provider == "openai":
         api_key = input("Enter your OPENAI_API_KEY: ").strip()
     else:
@@ -106,6 +174,10 @@ GOOGLE_API_KEY={api_key if llm_provider == 'google' else ''}
 # Models (Defaults)
 OPENAI_EMBEDDING_MODEL='text-embedding-3-small'
 GOOGLE_EMBEDDING_MODEL='models/embedding-001'
+
+# Chainlit — secret used to sign session JWTs.
+# User accounts live in the DB; create one by typing a new username at the login screen.
+CHAINLIT_AUTH_SECRET={format_env_value(generate_auth_secret())}
 """
     ENV_FILE.write_text(env_content, encoding='utf-8')
     print_color("\nConfiguration saved to .env!", "GREEN")
@@ -136,51 +208,52 @@ def step_reset_system():
     if ENV_FILE.exists():
         print_color("Removing configuration (.env)...", "BLUE")
         os.remove(ENV_FILE)
-        
+
     print_color("System reset successfully! Starting fresh setup...", "GREEN")
     time.sleep(1)
 
+
 def step_check_create_venv():
     print_color("\n[1/4] Checking Virtual Environment...", "HEADER")
-    
+
     pip_path = get_venv_pip()
     python_path = get_venv_python()
-    
+
     # Check if venv exists AND is complete (has pip)
     venv_is_valid = VENV_DIR.exists() and pip_path.exists() and python_path.exists()
-    
+
     if venv_is_valid:
         print_color("Virtual environment OK.", "GREEN")
         return
-    
+
     # Venv doesn't exist or is corrupted
     if VENV_DIR.exists():
         print_color("Virtual environment is corrupted or incomplete. Recreating...", "WARNING")
         shutil.rmtree(VENV_DIR)
-    
+
     print_color("Creating virtual environment...", "BLUE")
-    
+
     # Determine which python to use for creating the venv
     # If the user ran "python main.py" from the venv, and then did a Reset,
     # sys.executable still points to the DELETED venv python!
     creator_python = sys.executable
-    
+
     # Check if current executable is valid
     if not os.path.exists(creator_python):
         print_color("Current python interpreter not found. Falling back to system 'python3'...", "WARNING")
         creator_python = shutil.which("python3") or shutil.which("python")
-        
+
     if not creator_python:
         print_color("Could not find a valid python interpreter to create venv!", "FAIL")
         sys.exit(1)
-        
+
     subprocess.run([creator_python, "-m", "venv", str(VENV_DIR)], check=True)
     print_color("Virtual environment created successfully!", "GREEN")
 
 def step_install_requirements():
     print_color("\n[2/4] Installing/Updating Components...", "HEADER")
     pip_cmd = get_venv_pip()
-    
+
     if not REQUIREMENTS_FILE.exists():
         print_color("requirements.txt not found!", "FAIL")
         sys.exit(1)
@@ -302,37 +375,37 @@ def wait_for_docker(timeout=60):
 def step_ensure_docker():
     """Ensure Docker is installed and running before proceeding."""
     print_color("\n[Docker] Verificando Docker...", "HEADER")
-    
+
     # Check if Docker is installed
     if not check_docker_installed():
         print_color("❌ Docker não está instalado!", "FAIL")
         print(get_docker_install_instructions())
         print_color("Por favor, instale o Docker e execute este script novamente.", "WARNING")
         return False
-    
+
     print_color("✓ Docker CLI encontrado.", "GREEN")
-    
+
     # Check if Docker daemon is running
     if check_docker_running():
         print_color("✓ Docker daemon está rodando.", "GREEN")
         return True
-    
+
     # Docker is installed but not running
     print_color("⚠ Docker instalado, mas o daemon não está rodando.", "WARNING")
-    
+
     if sys.platform == "linux":
         print_color("\nNo Linux, execute manualmente:", "BLUE")
         print("  sudo systemctl start docker")
         print("\nE depois execute este script novamente.")
         return False
-    
+
     # Offer to start Docker Desktop (Mac/Windows)
     start_docker = input("\nDeseja tentar abrir o Docker Desktop? (S/n): ").strip().lower()
-    
+
     if start_docker in ["", "s", "sim", "y", "yes"]:
         print_color("Abrindo Docker Desktop...", "BLUE")
         open_docker_desktop()
-        
+
         if wait_for_docker(60):
             print_color("✓ Docker daemon iniciado com sucesso!", "GREEN")
             return True
@@ -364,11 +437,11 @@ def step_docker_compose():
 
     print_color("Ensuring infrastructure is up...", "BLUE")
     run_command("docker compose up -d")
-    
+
     # Wait a moment for DB to be ready
     print_color("Waiting for database to be ready...", "BLUE")
     time.sleep(3)
-    
+
     # Initialize Chainlit tables (required for data layer)
     print_color("Initializing Chainlit database tables...", "BLUE")
     python_cmd = get_venv_python()
@@ -376,33 +449,39 @@ def step_docker_compose():
         run_command(f'"{python_cmd}" -c "import sys; sys.path.insert(0, \'.\'); exec(open(\'src/scripts/init_chainlit_db.py\', encoding=\'utf-8\').read())"', check=True)
     except Exception as e:
         print_color(f"Warning: Could not initialize Chainlit tables: {e}", "WARNING")
-    
+
     # Apply migrations to fix any constraint issues
     print_color("Ensuring schema compatibility...", "BLUE")
     try:
         run_command(f'"{python_cmd}" -c "import sys; sys.path.insert(0, \'.\'); exec(open(\'src/scripts/migrate_chainlit_schema.py\', encoding=\'utf-8\').read())"', check=True, capture_output=True)
     except Exception:
         pass  # Silent - migrations are idempotent
-    
+
     print_color("Infrastructure ready!", "GREEN")
 
 def step_run_app():
     print_color("\n[4/4] Launching Application...", "HEADER")
-    
+
     if not APP_PATH.exists():
         print_color(f"Application file {APP_PATH} not found!", "FAIL")
         sys.exit(1)
 
+    if ENV_FILE.exists():
+        ensure_auth_secret()
+
     print_color(f"Starting Chainlit server on port {CHAINLIT_PORT}...", "GREEN")
     print_color("Press Ctrl+C to stop the server.", "WARNING")
     print_color("Please wait 30 seconds and visit http://localhost:8000", "GREEN")
-    
+    print_color("First time? Type a new username and password at the login screen — your account is created automatically.", "BLUE")
+
     try:
         python_cmd = get_venv_python()
         # Run Chainlit from the web directory so it can find the public folder
         web_dir = APP_PATH.parent
+        app_env = os.environ.copy()
+        app_env.update(parse_env_file())
         cmd = [str(python_cmd), "-m", "chainlit", "run", "chainlit_app.py", "-w", "--port", str(CHAINLIT_PORT)]
-        subprocess.run(cmd, check=True, cwd=str(web_dir))
+        subprocess.run(cmd, check=True, cwd=str(web_dir), env=app_env)
     except KeyboardInterrupt:
         print_color("\nServer stopped by user.", "WARNING")
     except subprocess.CalledProcessError as e:
@@ -412,14 +491,14 @@ def step_run_app():
 def step_kill_existing():
     """Kills any existing Chainlit processes or anything on port 8000."""
     print_color("\n[Force Restart] check for existing processes...", "HEADER")
-    
+
     # 1. Kill by Port 8000 (Mac/Linux specific, but user is on Mac)
     try:
         # Find PID on port 8000
         cmd = "lsof -ti:8000"
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         pids = result.stdout.strip().split()
-        
+
         for pid in pids:
             if pid:
                 print_color(f"Killing process on port 8000 (PID: {pid})...", "WARNING")
@@ -433,7 +512,7 @@ def step_kill_existing():
         subprocess.run("pkill -f chainlit", shell=True, stderr=subprocess.DEVNULL)
     except Exception:
         pass
-    
+
     time.sleep(1)
     print_color("Cleaned up existing processes.", "GREEN")
 
@@ -446,7 +525,7 @@ def main_menu():
     print("4. Stop All Processes (Kill Only)")
     print("5. Reset System (Wipe User Data & Config Only)")
     print("6. Exit")
-    
+
     choice = input("\nSelect option (1-6): ").strip()
     return choice
 
@@ -454,45 +533,45 @@ def main():
     try:
         while True:
             choice = main_menu()
-            
+
             if choice == "6":
                 print("Exiting...")
                 sys.exit(0)
-                
+
             elif choice == "4":
                 step_kill_existing()
                 # Loop back to menu after stopping
                 continue
-                
+
             elif choice == "5":
                 step_reset_system()
                 # Loop back to menu after reset
                 continue
-            
+
             elif choice == "3":
                 # Quick Launch - only run the app
                 step_run_app()
                 break
-            
+
             elif choice == "2":
                 step_kill_existing()
                 # Proceed to full start
-                
+
             elif choice == "1":
                 # Proceed to full start
                 pass
-            
+
             else:
                 print_color("Invalid option. Please try again.", "WARNING")
                 continue
 
             # --- Start Flow (Choices 1 & 2) ---
-            
+
             # Step 0: Check configuration FIRST (before any heavy setup)
             if not ENV_FILE.exists():
                 print_color("\n[0/4] Initial Configuration Required", "HEADER")
                 configure_env()
-            
+
             # Step 1-4: Normal setup
             step_check_create_venv()
             step_install_requirements()
@@ -500,7 +579,7 @@ def main():
             step_run_app()
             # Break loop after starting app (since app captures shell until Ctrl+C)
             break
-        
+
     except KeyboardInterrupt:
         print_color("\nSetup aborted by user.", "FAIL")
     except Exception as e:
