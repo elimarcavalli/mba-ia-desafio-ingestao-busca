@@ -103,6 +103,38 @@ O sistema irá:
 
 ---
 
+## 🖥️ Modo CLI
+
+Prefere o terminal? Também funciona sem a interface web:
+
+```bash
+# Ingere o documento definido em PDF_PATH no .env (padrão: document.pdf)
+python3 src/ingest.py
+
+# Ingere um arquivo específico (substitui o que foi ingerido antes)
+python3 src/ingest.py caminho/do/arquivo.pdf
+
+# Adiciona um arquivo mantendo os anteriores (pergunte sobre todos juntos)
+python3 src/ingest.py caminho/de/outro.pdf --append
+
+# Faz uma única pergunta e sai (one-shot)
+python3 src/chat.py "Qual o faturamento da empresa X?"
+
+# Ou inicia um chat interativo
+python3 src/chat.py
+```
+
+> 💡 Os scripts usam o `venv` do projeto automaticamente. Ainda não tem um? Rode `python3 main.py` uma vez (opção 1), ou configure manualmente:
+
+```bash
+python3 -m venv venv
+./venv/bin/pip install -r requirements.txt
+cp .env.example .env        # depois preencha sua API key
+docker compose up -d
+```
+
+---
+
 ## ⚙️ Pré-requisitos
 
 - **[Python 3.12+](https://www.python.org/downloads/)** instalado

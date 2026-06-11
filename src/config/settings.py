@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     database_url: str
     pg_vector_collection_name: str = "document_chunks"
 
+    # Default document for CLI ingestion (`python src/ingest.py`)
+    pdf_path: str = "document.pdf"
+
     # OpenAI
     openai_api_key: str | None = None
     openai_embedding_model: str = "text-embedding-3-small"

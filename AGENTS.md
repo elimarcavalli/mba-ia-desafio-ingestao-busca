@@ -37,6 +37,12 @@ python src/scripts/init_chainlit_db.py
 # CLI chat (alternative to web UI, runs from project root)
 ./venv/bin/python src/presentation/cli/chat.py
 
+# Ingest + ask via CLI (runs from project root; requires Docker up + .env; auto re-execs into venv)
+python3 src/ingest.py                  # ingest PDF_PATH from .env (default: document.pdf; replaces collection)
+python3 src/ingest.py file.pdf --append # add a file, keeping previously ingested ones
+python3 src/chat.py                    # interactive chat over ingested docs
+python3 src/chat.py "your question"    # one-shot: answer and exit
+
 # Install dependencies manually (if not using main.py)
 ./venv/bin/pip install -r requirements.txt
 ```
@@ -51,6 +57,7 @@ python src/scripts/init_chainlit_db.py
 - **`src/infrastructure/`** — Concrete adapter implementations (OpenAI, Google, PGVector, MultiFormatDocumentLoader, PostgresUserRepository, Argon2PasswordHasher). `ProviderFactory` in `factories/` is a singleton that handles all dependency injection — always use `ProviderFactory.get_*()`, never instantiate adapters directly.
 - **`src/presentation/web/`** — Chainlit web UI (`chainlit_app.py`). Must be run from its own directory for static assets to load.
 - **`src/presentation/cli/`** — Interactive CLI chat (`chat.py`). Alternative to web UI, runs from project root.
+- **`src/ingest.py` / `src/chat.py`** — Thin CLI entry points: `src/ingest.py` ingests `PDF_PATH` from `.env`, then `src/chat.py ["question"]` answers (interactive or one-shot). Both delegate to the use cases via `ProviderFactory`.
 - **`src/config/settings.py`** — Single source of truth for all configuration via Pydantic `BaseSettings` (reads from `.env`). The `sqlalchemy_database_url` property converts `postgresql://` to `postgresql+psycopg://` for SQLAlchemy/LangChain compatibility.
 
 ## Key Conventions
