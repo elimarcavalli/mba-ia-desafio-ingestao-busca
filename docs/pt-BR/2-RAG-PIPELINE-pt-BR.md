@@ -65,7 +65,7 @@ graph TD
 
 - Sua pergunta é convertida em vetor
 - O repositório usa **MMR (Maximal Marginal Relevance)**: busca `fetch_k = k × 3` candidatos por similaridade de cosseno e seleciona `k` finais maximizando relevância **e** diversidade — evita chunks redundantes do mesmo trecho do documento.
-- Retorna 15 chunks (configurável via `RETRIEVER_K`)
+- Retorna 10 chunks (configurável via `RETRIEVER_K`)
 
 **2.2. Montagem de Contexto**
 
@@ -84,7 +84,7 @@ graph TD
 | --------------- | ------ | -------------------------------------------------- |
 | `CHUNK_SIZE`    | 1000   | Tamanho de cada chunk (caracteres)                 |
 | `CHUNK_OVERLAP` | 150    | Sobreposição entre chunks                          |
-| `RETRIEVER_K`   | 15     | Quantidade de chunks recuperados (MMR `fetch_k=45`) |
+| `RETRIEVER_K`   | 10     | Quantidade de chunks recuperados (MMR `fetch_k=30`) |
 | `LLM_TIMEOUT`   | 60     | Timeout em segundos para chamadas LLM              |
 
 Configurações em: `src/config/settings.py` ou `.env`

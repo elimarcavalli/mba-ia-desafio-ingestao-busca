@@ -44,7 +44,7 @@ class TestDefaults:
         s = Settings()
         assert s.chunk_size == 1000
         assert s.chunk_overlap == 150
-        assert s.retriever_k == 15
+        assert s.retriever_k == 10
         assert s.llm_timeout == 60
 
     def test_provider_defaults(self, monkeypatch):

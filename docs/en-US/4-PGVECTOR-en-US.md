@@ -41,11 +41,11 @@ Texts with similar meaning have nearby vectors.
 SELECT content, 1 - (embedding <=> $1) AS similarity
 FROM langchain_pg_embedding
 ORDER BY embedding <=> $1
-LIMIT 45;
+LIMIT 30;
 ```
 
 - `<=>` = Cosine distance operator
-- DocMind fetches **45 candidates** (`fetch_k = retriever_k × 3 = 15 × 3`) and then applies **MMR** to reduce them to the final 15 with diversity.
+- DocMind fetches **30 candidates** (`fetch_k = retriever_k × 3 = 10 × 3`) and then applies **MMR** to reduce them to the final 10 with diversity.
 
 ---
 

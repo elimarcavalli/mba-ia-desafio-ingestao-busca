@@ -84,7 +84,7 @@ graph TD
 | --------------- | ------- | -------------------------------------------------- |
 | `CHUNK_SIZE`    | 1000    | Size of each chunk (characters)                    |
 | `CHUNK_OVERLAP` | 150     | Overlap between chunks                             |
-| `RETRIEVER_K`   | 15      | Number of chunks retrieved (MMR `fetch_k=45`)      |
+| `RETRIEVER_K`   | 10      | Number of chunks retrieved (MMR `fetch_k=30`)      |
 | `LLM_TIMEOUT`   | 60      | Timeout in seconds for LLM calls                   |
 
 Settings in: `src/config/settings.py` or `.env`

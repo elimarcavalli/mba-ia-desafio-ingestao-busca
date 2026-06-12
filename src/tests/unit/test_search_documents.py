@@ -47,8 +47,7 @@ class TestSearchDocumentsUseCaseConstruction:
 
         repo.get_retriever.assert_called_once()
         kwargs = repo.get_retriever.call_args.kwargs
-        # retriever_k currently defaults to 15
-        assert kwargs.get("k") == 15
+        assert kwargs.get("k") == 10
 
     def test_chain_built_on_init(self):
         """Chain should be built during __init__ (cached)."""

@@ -41,11 +41,11 @@ Textos com significado similar têm vetores próximos.
 SELECT content, 1 - (embedding <=> $1) AS similarity
 FROM langchain_pg_embedding
 ORDER BY embedding <=> $1
-LIMIT 45;
+LIMIT 30;
 ```
 
 - `<=>` = Operador de distância de cosseno
-- O DocMind busca **45 candidatos** (`fetch_k = retriever_k × 3 = 15 × 3`) e em seguida aplica **MMR** para reduzir a 15 finais com diversidade.
+- O DocMind busca **30 candidatos** (`fetch_k = retriever_k × 3 = 10 × 3`) e em seguida aplica **MMR** para reduzir a 10 finais com diversidade.
 
 ---
 
