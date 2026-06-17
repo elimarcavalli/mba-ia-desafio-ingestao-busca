@@ -225,7 +225,7 @@ O sistema usará Claude para geração e OpenAI apenas para embeddings.
 
 ---
 
-# 🤖 Teste a Escalabilidade!
+# 📈 Teste a Escalabilidade!
 
 Quer ver o poder da Clean Architecture em ação?
 

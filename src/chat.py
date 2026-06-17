@@ -57,7 +57,7 @@ def chat_loop(search_use_case):
             break
 
         print("🔍 Searching...")
-        print(f"\n🤖 Assistant:\n{ask(search_use_case, question)}\n")
+        print(f"\n🧠 DocMind:\n{ask(search_use_case, question)}\n")
 
 
 def main():
@@ -73,7 +73,7 @@ def main():
 
         if question:
             print(f"🔍 Question: {question}")
-            print(f"\n🤖 Assistant:\n{ask(search_use_case, question)}")
+            print(f"\n🧠 DocMind:\n{ask(search_use_case, question)}")
         else:
             chat_loop(search_use_case)
 

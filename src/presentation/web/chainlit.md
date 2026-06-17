@@ -1,4 +1,4 @@
-# 🤖 Welcome to DocMind!
+# 🧠 Welcome to DocMind!
 
 **Your intelligent assistant for PDF documents** - Ask questions and get accurate answers based on your documents!
 

@@ -1,4 +1,4 @@
-# 🤖 DocMind - RAG Semantic Search System
+# 📄🧠 DocMind - RAG Semantic Search System
 
 > **Your intelligent assistant for documents** — PDF, TXT, CSV, HTML, JSON, Markdown and DOCX. Ask questions and get accurate answers based on your documents!
 
@@ -189,10 +189,40 @@ This ensures:
 
 ---
 
-## 📖 Additional Documentation
+## 📖 Documentation Index
 
-- **[AGENTS.md](AGENTS.md)** - Instructions for AI assistants
-- **[docs/](docs/)** - In-depth technical documentation
+### Guides & References
+
+| # | Document | Description |
+|---|----------|-------------|
+| 1 | [Architecture](docs/en-US/1-ARCHITECTURE-en-US.md) | Clean/Hexagonal Architecture overview |
+| 2 | [RAG Pipeline](docs/en-US/2-RAG-PIPELINE-en-US.md) | End-to-end ingestion and retrieval flow |
+| 3 | [AI Models](docs/en-US/3-AI-MODELS-en-US.md) | LLM and embedding provider configuration |
+| 4 | [pgvector](docs/en-US/4-PGVECTOR-en-US.md) | Vector database setup and tuning |
+| 5 | [Extending the System](docs/en-US/5-EXTENDING-SYSTEM-en-US.md) | How to add new loaders, providers and features |
+| — | [AGENTS.md](AGENTS.md) | Instructions for AI assistants |
+
+### Screenshots
+
+| CLI — Ingest & Chat |
+|---------------------|
+| ![CLI](docs/screenshots/0-cli-ingest-chat.png) |
+
+| Login | Home |
+|-------|------|
+| ![Login](docs/screenshots/1-login.png) | ![Home](docs/screenshots/2-home.png) |
+
+| Chat — PDF upload | Chat — Question 1 |
+|-------------------|-------------------|
+| ![PDF upload](docs/screenshots/3-chat1-pdf.png) | ![Question 1](docs/screenshots/4-chat2-1.png) |
+
+| Chat — Answer | Chat — Follow-up |
+|---------------|------------------|
+| ![Answer](docs/screenshots/5-chat2-2.png) | ![Follow-up](docs/screenshots/6-chat2-3.png) |
+
+| Multi-document chat (Markdown) |
+|-------------------------------|
+| ![Multi-doc](docs/screenshots/7-chat3-multi-md.png) |
 
 ---
 

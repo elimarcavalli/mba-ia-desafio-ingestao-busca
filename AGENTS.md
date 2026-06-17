@@ -32,10 +32,10 @@ cd src/presentation/web && chainlit run chainlit_app.py --port 8000
 docker compose up -d
 
 # Initialize Chainlit DB schema
-python src/scripts/init_chainlit_db.py
+python3 src/scripts/init_chainlit_db.py
 
 # CLI chat (alternative to web UI, runs from project root)
-./venv/bin/python src/presentation/cli/chat.py
+python3 src/presentation/cli/chat.py
 
 # Ingest + ask via CLI (runs from project root; requires Docker up + .env; auto re-execs into venv)
 python3 src/ingest.py                  # ingest PDF_PATH from .env (default: document.pdf; replaces collection)
@@ -127,13 +127,13 @@ await cl.Message(content="Error: file not found").send()
 | Problem                     | Cause              | Solution                                 |
 | --------------------------- | ------------------ | ---------------------------------------- |
 | `venv/bin/python` not found | venv not created   | `python3 main.py` option 1               |
-| Chainlit tables missing     | DB not initialized | `python src/scripts/init_chainlit_db.py` |
+| Chainlit tables missing     | DB not initialized | `python3 src/scripts/init_chainlit_db.py` |
 | Port 8000 busy              | Previous process   | `main.py` option 4                       |
 | `/public/` not loading      | Wrong cwd          | Run from `src/presentation/web/`         |
 | `DATABASE_URL` invalid      | Wrong format       | Use `postgresql://` (auto-converts)      |
 | Chainlit sidebar has no past chats | User not logged in or missing `CHAINLIT_AUTH_SECRET` ([Chainlit history](https://docs.chainlit.io/data-persistence/history)) | Run `python3 main.py` to auto-generate the secret, then sign in (or sign up) at the login screen |
 | Login fails with "Sign in failed" | Wrong password for existing user — or, on registration, username outside `^[a-zA-Z0-9._@+-]{2,64}$` / password under 6 chars | Check the terminal where Chainlit runs; the auth callback prints `[auth] denied for '<id>': <reason>` to stderr |
-| `psycopg.errors.UndefinedColumn: passwordHash` | DB schema predates the auth feature | `python src/scripts/init_chainlit_db.py` to apply the `ALTER TABLE` migration |
+| `psycopg.errors.UndefinedColumn: passwordHash` | DB schema predates the auth feature | `python3 src/scripts/init_chainlit_db.py` to apply the `ALTER TABLE` migration |
 
 ## Pre-Delivery Checklist
 

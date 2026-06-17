@@ -107,7 +107,7 @@ def main():
                 
                 print("🔍 Searching...")
                 result = search_use_case.execute(question)
-                print(f"\n🤖 Assistant:\n{result.answer}\n")
+                print(f"\n🧠 DocMind:\n{result.answer}\n")
                 
             except KeyboardInterrupt:
                 print("\n👋 See you later!")

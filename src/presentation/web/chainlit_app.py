@@ -390,7 +390,7 @@ async def main(message: cl.Message):
                     "## 🎯 How it works:\n\n"
                     "1. **📄 Upload your documents** - Use the upload button or simply drag files into the chat\n"
                     "2. **❓ Ask anything** - Type your questions in natural language\n"
-                    "3. **🤖 Get smart answers** - The AI finds relevant info and crafts a precise response\n\n"
+                    "3. **🧠 Get smart answers** - The AI finds relevant info and crafts a precise response\n\n"
                     "## 🛠️ Available Commands:\n\n"
                     "- `/upload` - Add new documents to your library\n"
                     "- `/files` - See all your loaded documents\n"
